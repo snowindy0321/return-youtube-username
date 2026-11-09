@@ -4,13 +4,14 @@ import app.morphe.patcher.PatcherContext;
 import app.morphe.patcher.patch.AppTarget;
 import app.morphe.patcher.patch.Compatibility;
 import app.morphe.patcher.patch.Patch;
+import app.morphe.patcher.patch.PatchFunctionsKt;
 import app.morphe.patcher.patch.PatchKt;
-import java.lang.reflect.Constructor;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import kotlin.Unit;
 
 public class ReturnYouTubeUsernamePatch {
@@ -40,6 +41,8 @@ public class ReturnYouTubeUsernamePatch {
                         null
                 ));
 
+                def.extendWith(() -> ReturnYouTubeUsernamePatch.class.getClassLoader().getResourceAsStream("extensions/youtube.mpe"));
+
                 def.execute(() -> {
                     System.out.println("[*] ReturnYouTubeUsernamePatch executing...");
                     PatcherContext ctx = null;
@@ -66,100 +69,68 @@ public class ReturnYouTubeUsernamePatch {
                         hookLitho.invoke(null, EXTENSION_CLASS, "onLithoTextLoaded");
                         System.out.println("[+] Successfully hooked Litho text components via dynamic reflection.");
 
-                        // 2. Add independent Settings Screen
-                        Class<?> prefScreenClass = officialCl.loadClass("app.morphe.patches.youtube.misc.settings.PreferenceScreen");
-                        Object prefScreenInstance = prefScreenClass.getField("INSTANCE").get(null);
+                        // 2. Add independent Settings Screen via official Morphe AddOn Preferences
+                        try {
+                            File prefsFile = PatchFunctionsKt.resourceFile("morphe_addon_prefs.xml", false);
+                            String addonPrefs = "<morphe-add-on-preferences>\n" +
+                                    "    <screen after=\"morphe_settings_screen_11_misc_sort_by_title\">\n" +
+                                    "        <PreferenceScreen\n" +
+                                    "            xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                                    "            xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n" +
+                                    "            android:key=\"morphe_settings_screen_return_youtube_username\"\n" +
+                                    "            android:title=\"Return YouTube Username\"\n" +
+                                    "            android:summary=\"還原留言區與 Shorts 之使用者名稱 (@handle) 為頻道名稱\"\n" +
+                                    "            android:icon=\"@drawable/morphe_settings_screen_11_misc\"\n" +
+                                    "            app:icon=\"@drawable/morphe_settings_screen_11_misc\"\n" +
+                                    "            app:iconSpaceReserved=\"true\">\n" +
+                                    "\n" +
+                                    "            <SwitchPreference\n" +
+                                    "                android:key=\"morphe_return_youtube_username_enabled\"\n" +
+                                    "                android:defaultValue=\"true\"\n" +
+                                    "                android:title=\"啟用 Return YouTube Username\"\n" +
+                                    "                android:summaryOn=\"已開啟\"\n" +
+                                    "                android:summaryOff=\"已關閉\" />\n" +
+                                    "\n" +
+                                    "            <SwitchPreference\n" +
+                                    "                android:key=\"morphe_return_youtube_username_replace_comments\"\n" +
+                                    "                android:defaultValue=\"true\"\n" +
+                                    "                android:title=\"替換留言區使用者名稱\"\n" +
+                                    "                android:summaryOn=\"替換留言與回覆中之 @代號\"\n" +
+                                    "                android:summaryOff=\"保留原始 @代號\" />\n" +
+                                    "\n" +
+                                    "            <SwitchPreference\n" +
+                                    "                android:key=\"morphe_return_youtube_username_replace_shorts\"\n" +
+                                    "                android:defaultValue=\"true\"\n" +
+                                    "                android:title=\"替換 Shorts 上傳者名稱\"\n" +
+                                    "                android:summaryOn=\"顯示 Shorts 原作者頻道名稱\"\n" +
+                                    "                android:summaryOff=\"保留原始 @代號\" />\n" +
+                                    "\n" +
+                                    "            <SwitchPreference\n" +
+                                    "                android:key=\"morphe_return_youtube_username_replace_all_handles\"\n" +
+                                    "                android:defaultValue=\"true\"\n" +
+                                    "                android:title=\"替換全域所有 @代號\"\n" +
+                                    "                android:summaryOn=\"包含社群貼文、提及等所有可解析之 Handle\"\n" +
+                                    "                android:summaryOff=\"僅替換留言與 Shorts\" />\n" +
+                                    "\n" +
+                                    "            <EditTextPreference\n" +
+                                    "                android:key=\"morphe_return_youtube_username_api_key\"\n" +
+                                    "                android:title=\"YouTube Data API v3 Key (選填)\"\n" +
+                                    "                android:summary=\"填入個人 API 金鑰以享有更高配額；留空則自動使用公開端點解析\" />\n" +
+                                    "        </PreferenceScreen>\n" +
+                                    "    </screen>\n" +
+                                    "</morphe-add-on-preferences>\n";
 
-                        Class<?> switchPrefClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.SwitchPreference");
-                        Class<?> listPrefClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.ListPreference");
-                        Class<?> textPrefClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.TextPreference");
-                        Class<?> inputTypeClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.InputType");
-                        Class<?> sortingClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.PreferenceScreenPreference$Sorting");
-                        Object unsorted = sortingClass.getField("UNSORTED").get(null);
-                        Object inputTypeText = inputTypeClass.getField("TEXT").get(null);
-
-                        Set<Object> subPreferences = new LinkedHashSet<>();
-
-                        Constructor<?> switchCtor = switchPrefClass.getConstructor(
-                                String.class, String.class, boolean.class, String.class, String.class, String.class, String.class
-                        );
-                        subPreferences.add(switchCtor.newInstance(
-                                "morphe_return_youtube_username_enabled",
-                                "morphe_return_youtube_username_enabled_title",
-                                true,
-                                "SwitchPreference",
-                                null, null, null
-                        ));
-
-                        Constructor<?> listCtor = listPrefClass.getConstructor(
-                                String.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class
-                        );
-                        subPreferences.add(listCtor.newInstance(
-                                "morphe_return_youtube_username_display_format",
-                                "morphe_return_youtube_username_display_format_title",
-                                null, null, null,
-                                "app.morphe.extension.shared.settings.preference.CustomDialogListPreference",
-                                "morphe_return_youtube_username_display_format_entries",
-                                "morphe_return_youtube_username_display_format_entry_values"
-                        ));
-
-                        subPreferences.add(switchCtor.newInstance(
-                                "morphe_return_youtube_username_replace_comments",
-                                "morphe_return_youtube_username_replace_comments_title",
-                                true,
-                                "SwitchPreference",
-                                null, null, null
-                        ));
-
-                        subPreferences.add(switchCtor.newInstance(
-                                "morphe_return_youtube_username_replace_shorts",
-                                "morphe_return_youtube_username_replace_shorts_title",
-                                true,
-                                "SwitchPreference",
-                                null, null, null
-                        ));
-
-                        subPreferences.add(switchCtor.newInstance(
-                                "morphe_return_youtube_username_replace_all_handles",
-                                "morphe_return_youtube_username_replace_all_handles_title",
-                                true,
-                                "SwitchPreference",
-                                null, null, null
-                        ));
-
-                        Constructor<?> textCtor = textPrefClass.getConstructor(
-                                String.class, String.class, String.class, String.class, String.class, String.class, String.class, inputTypeClass
-                        );
-                        subPreferences.add(textCtor.newInstance(
-                                "morphe_return_youtube_username_api_key",
-                                "morphe_return_youtube_username_api_key_title",
-                                "morphe_return_youtube_username_api_key_summary",
-                                null, null, null,
-                                "app.morphe.extension.shared.settings.preference.ResettableEditTextPreference",
-                                inputTypeText
-                        ));
-
-                        Class<?> screenClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.BasePreferenceScreen$Screen");
-                        Class<?> basePrefScreenClass = officialCl.loadClass("app.morphe.patches.shared.misc.settings.preference.BasePreferenceScreen");
-
-                        Constructor<?> screenCtor = screenClass.getConstructor(
-                                basePrefScreenClass,
-                                String.class, String.class, String.class, String.class, String.class, String.class,
-                                Set.class, Set.class, sortingClass
-                        );
-                        screenCtor.newInstance(
-                                prefScreenInstance,
-                                "morphe_settings_screen_return_youtube_username",
-                                "morphe_return_youtube_username_screen_title",
-                                "morphe_return_youtube_username_screen_summary",
-                                "@drawable/morphe_settings_screen_11_misc",
-                                "@drawable/morphe_settings_screen_11_misc_bold",
-                                "@layout/preference_with_icon",
-                                subPreferences,
-                                new LinkedHashSet<>(),
-                                unsorted
-                        );
-                        System.out.println("[+] Successfully registered independent Settings Screen via dynamic reflection.");
+                            if (prefsFile.exists()) {
+                                String current = new String(Files.readAllBytes(prefsFile.toPath()), StandardCharsets.UTF_8);
+                                current = current.replace("</morphe-add-on-preferences>", addonPrefs.substring(addonPrefs.indexOf("<screen")));
+                                Files.write(prefsFile.toPath(), current.getBytes(StandardCharsets.UTF_8));
+                            } else {
+                                Files.write(prefsFile.toPath(), addonPrefs.getBytes(StandardCharsets.UTF_8));
+                            }
+                            System.out.println("[+] Successfully declared independent Settings Screen via Morphe AddOn Preferences.");
+                        } catch (Exception e) {
+                            System.err.println("[!] Failed to declare AddOn Preferences: " + e);
+                        }
 
                     } catch (Exception e) {
                         System.err.println("[!] Error executing ReturnYouTubeUsernamePatch: " + e);
