@@ -3,6 +3,7 @@ package app.morphe.extension.youtube.patches;
 import android.text.SpannableString;
 import android.text.Spanned;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import app.morphe.extension.shared.Logger;
@@ -38,8 +39,9 @@ public class ReturnYouTubeUsernamePatch {
     public static final BooleanSetting REPLACE_ALL_HANDLES =
             new BooleanSetting("morphe_return_youtube_username_replace_all_handles", true);
 
-    // Standard YouTube handle regex: starts with @ followed by alphanumeric, dot, underscore, hyphen
-    private static final Pattern HANDLE_PATTERN = Pattern.compile("^@[a-zA-Z0-9._-]+$");
+    // YouTube handle regex: starts with @ followed by Unicode letters/numbers/marks and punctuation allowed in handles
+    private static final Pattern HANDLE_PATTERN =
+            Pattern.compile("^@[^\\s/@#%&?+:;!\"'()\\[\\]{}<>=]+$");
 
     /**
      * Pre-fetch hook called when SpannableString is being built in the background.
@@ -51,7 +53,7 @@ public class ReturnYouTubeUsernamePatch {
                 return;
             }
 
-            String text = original.toString().trim();
+            String text = stripWhitespace(original.toString());
             if (isEligibleHandle(contextInterface, text)) {
                 ChannelResolver.prefetch(text, API_KEY.get());
             }
@@ -70,7 +72,7 @@ public class ReturnYouTubeUsernamePatch {
                 return original;
             }
 
-            String text = original.toString().trim();
+            String text = stripWhitespace(original.toString());
             if (!isEligibleHandle(contextInterface, text)) {
                 return original;
             }
@@ -78,7 +80,7 @@ public class ReturnYouTubeUsernamePatch {
             int format = DISPLAY_FORMAT.get();
             String resolved = ChannelResolver.getOrResolve(text, API_KEY.get(), format);
 
-            if (resolved != null && !resolved.equals(text)) {
+            if (resolved != null && !resolved.isEmpty() && !resolved.equals(text)) {
                 return newSpanUsingStylingOfAnotherSpan(original, resolved);
             }
         } catch (Exception ex) {
@@ -104,27 +106,77 @@ public class ReturnYouTubeUsernamePatch {
             String path = "";
             try {
                 StringBuilder pb = contextInterface.patch_getPathBuilder();
-                if (pb != null) path = pb.toString();
+                if (pb != null) path = pb.toString().toLowerCase(Locale.ENGLISH);
             } catch (Exception ignored) {}
 
             String identifier = "";
             try {
                 String id = contextInterface.patch_getIdentifier();
-                if (id != null) identifier = id;
+                if (id != null) identifier = id.toLowerCase(Locale.ENGLISH);
             } catch (Exception ignored) {}
 
-            boolean isComments = path.contains("author_badge") || path.contains("comment") || identifier.contains("comment");
+            // 1. Comments: comment text, author badge, comment thread, etc.
+            boolean isComments = path.contains("comment") || path.contains("author_badge") || identifier.contains("comment");
             if (isComments) {
                 return REPLACE_COMMENTS.get();
             }
 
+            // 2. Shorts: reel channel bar, reel player overlay, reel viewer, etc.
             boolean isShorts = path.contains("reel_channel_bar") || path.contains("reel_player_overlay") || path.contains("reel") || identifier.contains("reel");
             if (isShorts) {
                 return REPLACE_SHORTS.get();
             }
+
+            // 3. Channel profile / header / bottom sheet / about view
+            // Under a channel's header/profile, the handle item (e.g. @iamvaca8787 under the channel name)
+            // is specifically meant to show the channel's @handle and must NOT be replaced with the channel name again.
+            if (isChannelProfileHeader(path, identifier)) {
+                return false;
+            }
         }
 
         return REPLACE_ALL_HANDLES.get();
+    }
+
+    private static boolean isChannelProfileHeader(String path, String identifier) {
+        if (path == null) path = "";
+        if (identifier == null) identifier = "";
+
+        return path.contains("page_header")
+                || path.contains("channel_header")
+                || path.contains("compact_channel_bar")
+                || path.contains("channel_profile")
+                || path.contains("channel_about")
+                || path.contains("channel_metadata")
+                || path.contains("channel_description")
+                || path.contains("channel_page")
+                || path.contains("about_channel")
+                || path.contains("profile_sheet")
+                || path.contains("bottom_sheet_header")
+                || path.contains("shelf_header")
+                || path.contains("cairo")
+                || path.contains("profile")
+                || path.contains("channel")
+                || identifier.contains("page_header")
+                || identifier.contains("channel_header")
+                || identifier.contains("compact_channel_bar")
+                || identifier.contains("channel_profile")
+                || identifier.contains("profile")
+                || identifier.contains("channel")
+                || identifier.contains("cairo");
+    }
+
+    private static String stripWhitespace(String text) {
+        if (text == null) return null;
+        int start = 0;
+        int end = text.length();
+        while (start < end && (Character.isWhitespace(text.charAt(start)) || text.charAt(start) == '\u200B' || text.charAt(start) == '\uFEFF')) {
+            start++;
+        }
+        while (end > start && (Character.isWhitespace(text.charAt(end - 1)) || text.charAt(end - 1) == '\u200B' || text.charAt(end - 1) == '\uFEFF')) {
+            end--;
+        }
+        return text.substring(start, end);
     }
 
     /**

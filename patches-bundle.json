@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-09T23:30:00",
-  "description": "## Return YouTube Username v2.2.0\n\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches on both Morphe Manager (Android) and Morphe CLI.\n- Fixed ClassLoader reflection for Android ART / Dalvik runtime environments.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Replace YouTube @handles with original channel names in comments, Shorts, and across the app.\n- Zero-configuration out of the box (public handle scraper) + optional YouTube Data API v3 key.\n- Persistent disk caching (SharedPreferences) + fast in-memory LRU cache.\n- Preserves Litho formatting spans and author badges.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.0/return-youtube-username.mpp",
+  "created_at": "2026-11-10T00:30:00",
+  "description": "## Return YouTube Username v2.2.1\n\n- Support CJK & Unicode Handles: Fixed handle regex to support Chinese, Japanese, Korean, and all international Unicode handles in comments and Shorts.\n- URL-Encoding for Public Resolver: Ensure CJK handles are properly URL-encoded during network resolution.\n- Exclude Channel Profile Headers: Prevent channel page profile headers and bottom sheets from replacing the channel's @handle under the channel name with the channel title.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches on Morphe Manager (Android) and Morphe CLI.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.1/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }

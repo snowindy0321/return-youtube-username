@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
@@ -28,11 +29,17 @@ public final class ChannelResolver {
     private static final int NETWORK_TIMEOUT_MS = 3500;
     private static final int BLOCKING_TIMEOUT_MS = 600;
 
-    private static final Pattern OG_TITLE_PATTERN =
-            Pattern.compile("<meta\\s+property=\"og:title\"\\s+content=\"([^\"]+)\"");
+    private static final Pattern OG_TITLE_PATTERN_1 =
+            Pattern.compile("<meta\\s+[^>]*property=[\"']og:title[\"'][^>]*content=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern OG_TITLE_PATTERN_2 =
+            Pattern.compile("<meta\\s+[^>]*content=[\"']([^\"']+)[\"'][^>]*property=[\"']og:title[\"']", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern JSON_TITLE_PATTERN =
+            Pattern.compile("\"channelMetadataRenderer\"\\s*:\\s*\\{[^}]*\"title\"\\s*:\\s*\"([^\"]+)\"");
 
     private static final Pattern CHANNEL_TITLE_XML_PATTERN =
-            Pattern.compile("<title>([^<]+)</title>");
+            Pattern.compile("<title>([^<]+)</title>", Pattern.CASE_INSENSITIVE);
 
     // In-memory LRU / concurrent cache: handle (lowercase) -> real channel name
     private static final Map<String, String> cache = new ConcurrentHashMap<>();
@@ -66,11 +73,12 @@ public final class ChannelResolver {
         if (handle == null || handle.isEmpty()) return handle;
 
         String cleanHandle = handle.trim();
-        String normalizedKey = cleanHandle.toLowerCase(Locale.ENGLISH);
+        String normalizedKey = cleanHandle.toLowerCase(Locale.ROOT);
 
         // 1. Check in-memory cache
         String cachedName = cache.get(normalizedKey);
         if (cachedName != null) {
+            if (cachedName.isEmpty()) return cleanHandle;
             return formatName(cleanHandle, cachedName, format);
         }
 
@@ -78,8 +86,9 @@ public final class ChannelResolver {
         SharedPreferences sp = getPreferences();
         if (sp != null) {
             String diskCached = sp.getString(normalizedKey, null);
-            if (diskCached != null && !diskCached.isEmpty()) {
+            if (diskCached != null) {
                 cache.put(normalizedKey, diskCached);
+                if (diskCached.isEmpty()) return cleanHandle;
                 return formatName(cleanHandle, diskCached, format);
             }
         }
@@ -104,26 +113,28 @@ public final class ChannelResolver {
      */
     public static void prefetch(String handle, String apiKey) {
         if (handle == null || handle.isEmpty()) return;
-        String normalizedKey = handle.trim().toLowerCase(Locale.ENGLISH);
+        String normalizedKey = handle.trim().toLowerCase(Locale.ROOT);
         if (!cache.containsKey(normalizedKey)) {
             resolveAsync(handle.trim(), apiKey);
         }
     }
 
     public static Future<String> resolveAsync(final String handle, final String apiKey) {
-        final String normalizedKey = handle.toLowerCase(Locale.ENGLISH);
+        final String normalizedKey = handle.toLowerCase(Locale.ROOT);
 
         return inFlight.computeIfAbsent(normalizedKey, key ->
             Utils.submitOnBackgroundThread(() -> {
                 try {
                     String resolved = doFetch(handle, apiKey);
-                    if (resolved != null && !resolved.trim().isEmpty()) {
+                    if (resolved != null) {
                         resolved = unescapeHtml(resolved.trim());
                         cache.put(normalizedKey, resolved);
 
-                        SharedPreferences sp = getPreferences();
-                        if (sp != null) {
-                            sp.edit().putString(normalizedKey, resolved).apply();
+                        if (!resolved.isEmpty()) {
+                            SharedPreferences sp = getPreferences();
+                            if (sp != null) {
+                                sp.edit().putString(normalizedKey, resolved).apply();
+                            }
                         }
                         return resolved;
                     }
@@ -156,8 +167,9 @@ public final class ChannelResolver {
 
     private static String fetchViaDataApi(String handle, String apiKey) throws Exception {
         String clean = handle.startsWith("@") ? handle.substring(1) : handle;
+        String encodedClean = URLEncoder.encode(clean, "UTF-8");
         String urlStr = "https://www.googleapis.com/youtube/v3/channels?part=snippet,brandingSettings&forHandle="
-                + clean + "&key=" + apiKey;
+                + encodedClean + "&key=" + apiKey;
 
         HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
         conn.setRequestMethod("GET");
@@ -194,9 +206,10 @@ public final class ChannelResolver {
     }
 
     private static String fetchViaPublicPage(String handle) {
-        String target = handle.startsWith("@") ? handle : "@" + handle;
+        String target = handle.startsWith("@") ? handle.substring(1) : handle;
         try {
-            URL url = new URL("https://www.youtube.com/" + target);
+            String encodedHandle = URLEncoder.encode(target, "UTF-8");
+            URL url = new URL("https://www.youtube.com/@" + encodedHandle);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
@@ -208,16 +221,40 @@ public final class ChannelResolver {
             int code = conn.getResponseCode();
             if (code == 200) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    Matcher m = OG_TITLE_PATTERN.matcher(line);
-                    if (m.find()) {
-                        String name = m.group(1);
-                        reader.close();
-                        return name;
-                    }
+                    sb.append(line).append('\n');
+                    if (sb.length() > 150000) break;
                 }
                 reader.close();
+
+                String html = sb.toString();
+                Matcher m = OG_TITLE_PATTERN_1.matcher(html);
+                if (m.find()) {
+                    String name = m.group(1).trim();
+                    if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) return name;
+                }
+                m = OG_TITLE_PATTERN_2.matcher(html);
+                if (m.find()) {
+                    String name = m.group(1).trim();
+                    if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) return name;
+                }
+                m = JSON_TITLE_PATTERN.matcher(html);
+                if (m.find()) {
+                    String name = m.group(1).trim();
+                    if (!name.isEmpty()) return name;
+                }
+                m = CHANNEL_TITLE_XML_PATTERN.matcher(html);
+                if (m.find()) {
+                    String name = m.group(1).trim();
+                    if (name.endsWith(" - YouTube")) {
+                        name = name.substring(0, name.length() - 10).trim();
+                    }
+                    if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) return name;
+                }
+            } else if (code == 404) {
+                return "";
             }
         } catch (Exception e) {
             Logger.printDebug(() -> "fetchViaPublicPage failed for " + handle + ": " + e.getMessage());
@@ -245,6 +282,7 @@ public final class ChannelResolver {
                    .replace("&#39;", "'")
                    .replace("&apos;", "'")
                    .replace("&lt;", "<")
-                   .replace("&gt;", ">");
+                   .replace("&gt;", ">")
+                   .replace("\\\"", "\"");
     }
 }
