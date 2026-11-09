@@ -17,6 +17,11 @@ def resolve_tools():
     if not javac and os.path.exists(jbr_javac):
         javac = jbr_javac
 
+    java = shutil.which("java")
+    jbr_java = r"C:\Program Files\Android\Android Studio\jbr\bin\java.exe"
+    if not java and os.path.exists(jbr_java):
+        java = jbr_java
+
     # Android SDK
     android_home = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
     if not android_home:
@@ -52,9 +57,9 @@ def resolve_tools():
                     android_jar = cand
                     break
 
-    return javac, d8_path, android_jar
+    return javac, java, d8_path, android_jar
 
-JAVAC, D8, ANDROID_JAR = resolve_tools()
+JAVAC, JAVA, D8, ANDROID_JAR = resolve_tools()
 
 # Ensure base MPP and Morphe CLI exist
 MORPHE_CLI = os.path.join(BASE_DIR, "morphe-desktop-2.1.1-all.jar")
@@ -284,7 +289,14 @@ def main():
                 rel_path = os.path.relpath(full_path, mpp_work)
                 zf.write(full_path, rel_path)
 
-    print(f"[+] Successfully built: {out_mpp} ({os.path.getsize(out_mpp):,} bytes)")
+    # 10. Sign MPP bundle with Ed25519 signature
+    private_key = os.environ.get("MORPHE_PRIVATE_KEY", "ZAC2EP/Tqdmb1Fm7Sxj/s5XVXNLeZFPLaP5HfJJLYvI=")
+    signer_java = os.path.join(BASE_DIR, "SignBundle.java")
+    cmd_sign = f'"{JAVA}" -cp "{MORPHE_CLI}" "{signer_java}" "{out_mpp}" "{private_key}"'
+    sign_res = run(cmd_sign, "Signing MPP bundle with Ed25519")
+    print(sign_res.strip())
+
+    print(f"[+] Successfully built and signed: {out_mpp} ({os.path.getsize(out_mpp):,} bytes)")
 
 if __name__ == "__main__":
     main()

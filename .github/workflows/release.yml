@@ -72,7 +72,7 @@ jobs:
               'download_url': f'https://github.com/${{ github.repository }}/releases/download/{TAG}/patches-2.1.0-with-return-youtube-username.mpp',
               'signature_download_url': '',
               'version': VER,
-              'public_key': ''
+              'public_key': 'NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk='
           }
           with open('patches-bundle.json', 'w', encoding='utf-8') as f:
               json.dump(data, f, indent=2)
