@@ -197,7 +197,7 @@ def main():
     manifest_dir = os.path.join(mpp_work, "META-INF")
     os.makedirs(manifest_dir)
     with open(os.path.join(manifest_dir, "MANIFEST.MF"), "w", encoding="utf-8") as f:
-        f.write("Manifest-Version: 1.0\nName: Return YouTube Username\nVersion: 2.2.1\n")
+        f.write("Manifest-Version: 1.0\nName: Return YouTube Username\nVersion: 2.2.2\n")
 
     # 7. Package standalone MPP bundle
     out_mpp = os.path.join(BASE_DIR, "return-youtube-username.mpp")

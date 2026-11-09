@@ -212,7 +212,7 @@ public final class ChannelResolver {
             URL url = new URL("https://www.youtube.com/@" + encodedHandle);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36");
             conn.setRequestProperty("Accept-Language", "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7");
             conn.setConnectTimeout(NETWORK_TIMEOUT_MS);
             conn.setReadTimeout(NETWORK_TIMEOUT_MS);
@@ -225,7 +225,6 @@ public final class ChannelResolver {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append('\n');
-                    if (sb.length() > 150000) break;
                 }
                 reader.close();
 

@@ -115,23 +115,29 @@ public class ReturnYouTubeUsernamePatch {
                 if (id != null) identifier = id.toLowerCase(Locale.ENGLISH);
             } catch (Exception ignored) {}
 
-            // 1. Comments: comment text, author badge, comment thread, etc.
-            boolean isComments = path.contains("comment") || path.contains("author_badge") || identifier.contains("comment");
-            if (isComments) {
-                return REPLACE_COMMENTS.get();
-            }
-
-            // 2. Shorts: reel channel bar, reel player overlay, reel viewer, etc.
-            boolean isShorts = path.contains("reel_channel_bar") || path.contains("reel_player_overlay") || path.contains("reel") || identifier.contains("reel");
-            if (isShorts) {
-                return REPLACE_SHORTS.get();
-            }
-
-            // 3. Channel profile / header / bottom sheet / about view
+            // Priority 1: Channel profile header / bottom sheet (Image 2 vs Image 3)
             // Under a channel's header/profile, the handle item (e.g. @iamvaca8787 under the channel name)
             // is specifically meant to show the channel's @handle and must NOT be replaced with the channel name again.
             if (isChannelProfileHeader(path, identifier)) {
                 return false;
+            }
+
+            // Priority 2: Comments: comment text, author badge, comment thread, reply, etc.
+            boolean isComments = path.contains("comment")
+                    || path.contains("author")
+                    || path.contains("reply")
+                    || identifier.contains("comment")
+                    || identifier.contains("author")
+                    || identifier.contains("reply");
+            if (isComments) {
+                return REPLACE_COMMENTS.get();
+            }
+
+            // Priority 3: Shorts: reel channel bar, reel player overlay, reel viewer, etc.
+            boolean isShorts = path.contains("reel") || identifier.contains("reel")
+                    || path.contains("shorts") || identifier.contains("shorts");
+            if (isShorts) {
+                return REPLACE_SHORTS.get();
             }
         }
 
@@ -142,28 +148,24 @@ public class ReturnYouTubeUsernamePatch {
         if (path == null) path = "";
         if (identifier == null) identifier = "";
 
+        // Comments, replies, authors, and shorts are NEVER channel profile headers
+        if (path.contains("comment") || identifier.contains("comment")
+                || path.contains("author") || identifier.contains("author")
+                || path.contains("reply") || identifier.contains("reply")
+                || path.contains("reel") || identifier.contains("reel")) {
+            return false;
+        }
+
         return path.contains("page_header")
-                || path.contains("channel_header")
+                || path.contains("about_channel_view")
+                || path.contains("cairo_channel_header")
+                || path.contains("channel_profile_sheet")
                 || path.contains("compact_channel_bar")
-                || path.contains("channel_profile")
-                || path.contains("channel_about")
-                || path.contains("channel_metadata")
-                || path.contains("channel_description")
-                || path.contains("channel_page")
-                || path.contains("about_channel")
-                || path.contains("profile_sheet")
-                || path.contains("bottom_sheet_header")
-                || path.contains("shelf_header")
-                || path.contains("cairo")
-                || path.contains("profile")
-                || path.contains("channel")
                 || identifier.contains("page_header")
-                || identifier.contains("channel_header")
-                || identifier.contains("compact_channel_bar")
-                || identifier.contains("channel_profile")
-                || identifier.contains("profile")
-                || identifier.contains("channel")
-                || identifier.contains("cairo");
+                || identifier.contains("about_channel_view")
+                || identifier.contains("cairo_channel_header")
+                || identifier.contains("channel_profile_sheet")
+                || identifier.contains("compact_channel_bar");
     }
 
     private static String stripWhitespace(String text) {
