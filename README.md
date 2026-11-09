@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/github/v/release/snowindy0321/return-youtube-username?style=flat-square&color=blue&label=Latest%20Release" alt="Latest Release">
   </a>
   <img src="https://img.shields.io/badge/Target%20YouTube-v21.30.216-red?style=flat-square&logo=youtube" alt="Target YouTube">
-  <img src="https://img.shields.io/badge/Morphe-v2.1.0-green?style=flat-square" alt="Morphe Compatibility">
+  <img src="https://img.shields.io/badge/Morphe-v2.1.0+-green?style=flat-square" alt="Morphe Compatibility">
 </p>
 
 為 YouTube Android (Morphe) 開發的原生補丁，將留言區、Shorts 短片、社群貼文等所有 `@使用者名稱`（Handle）重置並還原為原本的「頻道名稱」（Username / Channel Title）。
