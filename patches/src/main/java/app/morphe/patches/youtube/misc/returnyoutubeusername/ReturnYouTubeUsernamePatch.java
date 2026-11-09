@@ -3,6 +3,7 @@ package app.morphe.patches.youtube.misc.returnyoutubeusername;
 import app.morphe.patcher.patch.Patch;
 import app.morphe.patcher.patch.PatchKt;
 import app.morphe.patches.shared.misc.settings.preference.BasePreference;
+import app.morphe.patches.shared.misc.settings.preference.BasePreferenceScreen;
 import app.morphe.patches.shared.misc.settings.preference.InputType;
 import app.morphe.patches.shared.misc.settings.preference.ListPreference;
 import app.morphe.patches.shared.misc.settings.preference.PreferenceScreenPreference;
@@ -86,17 +87,19 @@ public class ReturnYouTubeUsernamePatch {
                             InputType.TEXT
                     ));
 
-                    PreferenceScreenPreference screenPref = new PreferenceScreenPreference(
-                            "morphe_return_youtube_username_screen",
+                    // Create an independent top-level settings screen in Morphe settings
+                    // completely separated from official MISC (其他) or other screens.
+                    PreferenceScreen.INSTANCE.new Screen(
+                            "morphe_settings_screen_return_youtube_username",
                             "morphe_return_youtube_username_screen_title",
                             "morphe_return_youtube_username_screen_summary",
-                            null, null, null,
-                            Sorting.UNSORTED,
-                            "PreferenceScreen",
-                            subPreferences
+                            "@drawable/morphe_settings_screen_11_misc",
+                            "@drawable/morphe_settings_screen_11_misc_bold",
+                            "@layout/preference_with_icon",
+                            subPreferences,
+                            new LinkedHashSet<>(),
+                            Sorting.UNSORTED
                     );
-
-                    PreferenceScreen.INSTANCE.getMISC().addPreferences(screenPref);
 
                     // Background thread pre-fetch during SpannableString building
                     TextComponentPatchKt.hookSpannableString(EXTENSION_CLASS, "preFetchLithoText", false);
