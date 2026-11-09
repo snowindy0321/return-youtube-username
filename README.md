@@ -41,12 +41,14 @@ Morphe Manager 將自動開啟並提示新增此補丁來源。
 
 ## 🌟 核心特色
 
-1. **完全相容官方 Morphe 生態**：
-   - 採用 Morphe 官方 patch 與 extension 規範。
-   - 與官方 2.1.0 補丁（目標 YouTube 版本 `21.30.216`）100% 共存且零衝突。
-   - 完美相容 GmsCore、SponsorBlock、Return YouTube Dislike 等所有現有補丁。
+1. **純獨立補丁包（Pure Standalone MPP，僅 ~18 KB）**：
+   - 僅包含 `return-youtube-username` 本身之補丁邏輯與多語言字串，完全不重複打包官方已有的 112+ 項補丁。
+   - 與官方 Morphe 補丁完美共存，在 Morphe Manager 中可作為獨立來源與官方來源同時勾選修補，零衝突。
 
-2. **免 API Key 開箱即用 + 支援官方 API v3**：
+2. **獨立專屬設定選單**：
+   - 於 YouTube 內的 Morphe 設定選單中建立專屬第一層選單「**Return YouTube Username**」，完全與官方各項設定解耦分開，清晰易讀。
+
+3. **免 API Key 開箱即用 + 支援官方 API v3**：
    - **零設定模式（預設）**：直接透過 YouTube 公開端點自動解析頻道名稱並解碼 HTML 實體符號，無需申請任何 Google API Key 即可使用！
    - **API v3 模式（選用）**：可於 Morphe 設定中填入個人的 YouTube Data API v3 金鑰，享受更高配額與官方查詢。
 

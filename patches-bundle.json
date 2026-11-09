@@ -1,7 +1,7 @@
 {
   "created_at": "2026-11-09T20:15:00",
-  "description": "## Return YouTube Username v2.1.0\n\n- Replace YouTube @handles with original channel names in comments, Shorts, and across the app.\n- Zero-configuration out of the box (public handle scraper) + optional YouTube Data API v3 key.\n- Persistent disk caching (SharedPreferences) + fast in-memory LRU cache.\n- Preserves Litho formatting spans and author badges.\n- Fully compatible with Morphe 2.1.0 and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.1.0/patches-2.1.0-with-return-youtube-username.mpp",
+  "description": "## Return YouTube Username v2.1.0\n\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Replace YouTube @handles with original channel names in comments, Shorts, and across the app.\n- Zero-configuration out of the box (public handle scraper) + optional YouTube Data API v3 key.\n- Persistent disk caching (SharedPreferences) + fast in-memory LRU cache.\n- Preserves Litho formatting spans and author badges.\n- Fully compatible with Morphe 2.1.0 and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.1.0/return-youtube-username.mpp",
   "signature_download_url": "",
   "version": "2.1.0",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
