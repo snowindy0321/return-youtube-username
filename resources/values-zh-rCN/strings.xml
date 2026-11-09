@@ -1,0 +1,16 @@
+<resources>
+    <!-- Return YouTube Username Patch Strings (Simplified Chinese) -->
+    <string name="morphe_return_youtube_username_screen_title">恢复 YouTube 用户名</string>
+    <string name="morphe_return_youtube_username_screen_summary">将 YouTube 的 @用户名 重置为原始频道名称</string>
+    <string name="morphe_return_youtube_username_enabled_title">启用恢复用户名</string>
+    <string name="morphe_return_youtube_username_enabled_summary">在评论区、Shorts 及全局将 @用户名 替换为频道名称</string>
+    <string name="morphe_return_youtube_username_display_format_title">显示格式</string>
+    <string name="morphe_return_youtube_username_replace_comments_title">评论区替换</string>
+    <string name="morphe_return_youtube_username_replace_comments_summary">在视频评论与回复中显示频道名称</string>
+    <string name="morphe_return_youtube_username_replace_shorts_title">Shorts 短视频替换</string>
+    <string name="morphe_return_youtube_username_replace_shorts_summary">在 Shorts 界面中将创作者用户名替换为频道名称</string>
+    <string name="morphe_return_youtube_username_replace_all_handles_title">替换所有用户名</string>
+    <string name="morphe_return_youtube_username_replace_all_handles_summary">在应用程序其他界面也替换 @用户名</string>
+    <string name="morphe_return_youtube_username_api_key_title">YouTube Data API v3 密钥</string>
+    <string name="morphe_return_youtube_username_api_key_summary">选填。若留空将自动通过免 API 密钥解析器工作。</string>
+</resources>

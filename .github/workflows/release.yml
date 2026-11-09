@@ -1,0 +1,93 @@
+name: Build and Release Morphe Patches
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 2.1.0)'
+        required: true
+        default: '2.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android Build Tools and Platform
+        run: |
+          sdkmanager "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Build MPP Patch Bundle
+        run: |
+          python build_patch.py
+
+      - name: Determine Version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="v${{ github.event.inputs.version }}"
+            VER="${{ github.event.inputs.version }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            VER="${TAG#v}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Update patches-bundle.json
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+          VER="${{ steps.get_version.outputs.version }}"
+          python -c "
+          import json, datetime
+          data = {
+              'created_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
+              'description': f'## Return YouTube Username {TAG}\n\n- Replace YouTube @handles with original channel names in comments, Shorts, and across the app.\n- Zero-config public scraper + optional YouTube Data API v3 key.\n- Built for YouTube 21.30.216 & Morphe 2.1.0.',
+              'download_url': f'https://github.com/${{ github.repository }}/releases/download/{TAG}/patches-2.1.0-with-return-youtube-username.mpp',
+              'signature_download_url': '',
+              'version': VER,
+              'public_key': ''
+          }
+          with open('patches-bundle.json', 'w', encoding='utf-8') as f:
+              json.dump(data, f, indent=2)
+          "
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add patches-bundle.json
+          git diff-index --quiet HEAD || git commit -m "chore: update patches-bundle.json for $TAG"
+          git push origin main || true
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            patches-2.1.0-with-return-youtube-username.mpp
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

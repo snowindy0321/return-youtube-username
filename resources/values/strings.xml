@@ -1,0 +1,16 @@
+<resources>
+    <!-- Return YouTube Username Patch Strings -->
+    <string name="morphe_return_youtube_username_screen_title">Return YouTube Username</string>
+    <string name="morphe_return_youtube_username_screen_summary">Replace YouTube handles (@handle) with original channel names</string>
+    <string name="morphe_return_youtube_username_enabled_title">Enable Return YouTube Username</string>
+    <string name="morphe_return_youtube_username_enabled_summary">Restore @handles to original channel names across the app</string>
+    <string name="morphe_return_youtube_username_display_format_title">Display format</string>
+    <string name="morphe_return_youtube_username_replace_comments_title">Replace in comments</string>
+    <string name="morphe_return_youtube_username_replace_comments_summary">Restore channel names in comment sections and replies</string>
+    <string name="morphe_return_youtube_username_replace_shorts_title">Replace in Shorts</string>
+    <string name="morphe_return_youtube_username_replace_shorts_summary">Restore creator channel names in Shorts overlay</string>
+    <string name="morphe_return_youtube_username_replace_all_handles_title">Replace all handles</string>
+    <string name="morphe_return_youtube_username_replace_all_handles_summary">Replace @handles anywhere else in the app</string>
+    <string name="morphe_return_youtube_username_api_key_title">YouTube Data API v3 key</string>
+    <string name="morphe_return_youtube_username_api_key_summary">Optional. If left blank, handles are resolved automatically without an API key.</string>
+</resources>

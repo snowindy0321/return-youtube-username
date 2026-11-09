@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="morphe_return_youtube_username_display_format_entries">
+        <item>僅顯示頻道名稱 (例: MrBeast)</item>
+        <item>頻道名稱 (代號) (例: MrBeast (@mrbeast))</item>
+        <item>代號 (頻道名稱) (例: @mrbeast (MrBeast))</item>
+    </string-array>
+</resources>

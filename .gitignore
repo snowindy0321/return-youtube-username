@@ -1,0 +1,12 @@
+# Build directories
+build/
+*.class
+*.dex
+
+# Large local binary files
+*.apk
+*.jar
+*.mpp
+*.log
+*.tmp
+phone_dump.xml
