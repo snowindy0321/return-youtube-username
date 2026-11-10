@@ -148,24 +148,32 @@ public class ReturnYouTubeUsernamePatch {
         if (path == null) path = "";
         if (identifier == null) identifier = "";
 
-        // Comments, replies, authors, and shorts are NEVER channel profile headers
-        if (path.contains("comment") || identifier.contains("comment")
-                || path.contains("author") || identifier.contains("author")
-                || path.contains("reply") || identifier.contains("reply")
-                || path.contains("reel") || identifier.contains("reel")) {
-            return false;
-        }
-
         return path.contains("page_header")
-                || path.contains("about_channel_view")
+                || path.contains("content_metadata")
+                || path.contains("profile_card")
+                || path.contains("profilecard")
+                || path.contains("channel_profile")
+                || path.contains("channel_header")
+                || path.contains("channel_page")
+                || path.contains("channel_metadata")
+                || path.contains("channel_about")
+                || path.contains("about_channel")
+                || path.contains("profile_sheet")
+                || path.contains("bottom_sheet_header")
                 || path.contains("cairo_channel_header")
-                || path.contains("channel_profile_sheet")
-                || path.contains("compact_channel_bar")
                 || identifier.contains("page_header")
-                || identifier.contains("about_channel_view")
-                || identifier.contains("cairo_channel_header")
-                || identifier.contains("channel_profile_sheet")
-                || identifier.contains("compact_channel_bar");
+                || identifier.contains("content_metadata")
+                || identifier.contains("profile_card")
+                || identifier.contains("profilecard")
+                || identifier.contains("channel_profile")
+                || identifier.contains("channel_header")
+                || identifier.contains("channel_page")
+                || identifier.contains("channel_metadata")
+                || identifier.contains("channel_about")
+                || identifier.contains("about_channel")
+                || identifier.contains("profile_sheet")
+                || identifier.contains("bottom_sheet_header")
+                || identifier.contains("cairo_channel_header");
     }
 
     private static String stripWhitespace(String text) {

@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-10T01:00:00",
-  "description": "## Return YouTube Username v2.2.2\n\n- Fix complete stream read for og:title: Remove premature buffer cutoff in public resolver to properly extract channel names on all pages.\n- Precision channel profile header filtering: Target strictly page_header and profile sheets so comments and Shorts handles are never blocked.\n- Full CJK & Unicode Handle resolution: Completely supports Chinese, Japanese, Korean, and international handles in comments and Shorts.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches on Morphe Manager (Android) and Morphe CLI.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.2/return-youtube-username.mpp",
+  "created_at": "2026-11-10T08:30:00",
+  "description": "## Return YouTube Username v2.2.3\n\n- Fix Channel Profile Card Exclusion: Properly identify Profile Card bottom sheets and page headers when opened from comments or search, preventing the handle subtitle (@handle) under the channel name from being replaced.\n- Keep Comments & Shorts 100% Functional: Fully preserves comment handle replacement and CJK / Unicode resolution.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches on Morphe Manager (Android) and Morphe CLI.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.3/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }
