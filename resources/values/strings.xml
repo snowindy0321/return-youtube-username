@@ -9,6 +9,10 @@
     <string name="morphe_return_youtube_username_replace_comments_summary">Restore channel names in comment sections and replies</string>
     <string name="morphe_return_youtube_username_replace_shorts_title">Replace in Shorts</string>
     <string name="morphe_return_youtube_username_replace_shorts_summary">Restore creator channel names in Shorts overlay</string>
+    <string name="morphe_return_youtube_username_replace_live_chat_title">Replace in live chat</string>
+    <string name="morphe_return_youtube_username_replace_live_chat_summary">Restore channel names in live chat and chat replays</string>
+    <string name="morphe_return_youtube_username_replace_title_description_title">Replace in title &amp; description</string>
+    <string name="morphe_return_youtube_username_replace_title_description_summary">Replace @handles with @ChannelName in video titles and descriptions</string>
     <string name="morphe_return_youtube_username_replace_all_handles_title">Replace all handles</string>
     <string name="morphe_return_youtube_username_replace_all_handles_summary">Replace @handles anywhere else in the app</string>
     <string name="morphe_return_youtube_username_api_key_title">YouTube Data API v3 key</string>

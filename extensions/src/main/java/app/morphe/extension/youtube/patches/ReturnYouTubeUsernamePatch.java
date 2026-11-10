@@ -43,6 +43,9 @@ public class ReturnYouTubeUsernamePatch {
     public static final BooleanSetting REPLACE_LIVE_CHAT =
             new BooleanSetting("morphe_return_youtube_username_replace_live_chat", true);
 
+    public static final BooleanSetting REPLACE_TITLE_DESCRIPTION =
+            new BooleanSetting("morphe_return_youtube_username_replace_title_description", true);
+
     /**
      * Entry point called on application / activity initialization.
      * Ensures this class is loaded and all Settings are registered into Morphe's Setting registry
@@ -59,9 +62,9 @@ public class ReturnYouTubeUsernamePatch {
     private static final Pattern HANDLE_PATTERN =
             Pattern.compile("^@[^\\s/@#%&?+:;!\"'()\\[\\]{}<>=]+$");
 
-    // YouTube handle within live chat text or messages: starts at line begin or preceded by space/punctuation
+    // YouTube handle within text: starts at line begin or preceded by non-handle character
     private static final Pattern IN_TEXT_HANDLE_PATTERN =
-            Pattern.compile("(?:^|[\\s:(\\[])(@[^\\s/:;!\"'()\\[\\]{}<>=]+)");
+            Pattern.compile("(?:^|[^a-zA-Z0-9._%+-])(@[a-zA-Z0-9_-](?:[a-zA-Z0-9._-]{0,28}[a-zA-Z0-9_-])?)");
 
     private static final class MatchRange {
         final String handle;
@@ -95,13 +98,17 @@ public class ReturnYouTubeUsernamePatch {
                 return;
             }
 
-            // 2. Live chat & video subtitle in-text handles
-            if ((REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text))
-                    || (isVideoSubtitleContext(contextInterface) && text.indexOf('@') >= 0)) {
-                Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
-                while (matcher.find()) {
-                    String handle = matcher.group(1);
-                    ChannelResolver.prefetch(handle, API_KEY.get());
+            // 2. In-text handles (Title, description, live chat, video subtitle)
+            if (text.indexOf('@') >= 0) {
+                boolean shouldFetch = (REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text))
+                        || (REPLACE_TITLE_DESCRIPTION.get() && isTitleOrDescriptionContext(contextInterface, text))
+                        || isVideoSubtitleContext(contextInterface);
+                if (shouldFetch) {
+                    Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
+                    while (matcher.find()) {
+                        String handle = matcher.group(1);
+                        ChannelResolver.prefetch(handle, API_KEY.get());
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -131,25 +138,30 @@ public class ReturnYouTubeUsernamePatch {
                 }
             }
 
-            // 1. In-text handle replacement (Live Chat, Super Chat, or video subtitle with in-text handles)
-            if ((REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text))
-                    || (isVideoSubtitleContext(contextInterface) && text.indexOf('@') >= 0)) {
-                return replaceInTextHandles(contextInterface, original);
+            // 1. In-text handle replacement (Live Chat, Title, Description, or Video Subtitle)
+            if (text.indexOf('@') >= 0) {
+                boolean isLiveChat = REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text);
+                boolean isTitleDesc = REPLACE_TITLE_DESCRIPTION.get() && isTitleOrDescriptionContext(contextInterface, text);
+                boolean isVideoSub = isVideoSubtitleContext(contextInterface);
+
+                if (isLiveChat || isTitleDesc || isVideoSub) {
+                    return replaceInTextHandles(contextInterface, original);
+                }
             }
 
-            // 2. Standalone handle replacement (Comments, Shorts uploaders, video metadata)
+            // 2. Standalone handle replacement (Comments, Shorts uploaders, video metadata, title/description)
             String stripped = stripWhitespace(text);
             if (isEligibleHandle(contextInterface, stripped)) {
                 int format = DISPLAY_FORMAT.get();
                 String resolved = ChannelResolver.getOrResolve(stripped, API_KEY.get(), format);
                 if (resolved != null && !resolved.isEmpty() && !resolved.equals(stripped)) {
-                    if (isVideoSubtitleContext(contextInterface)) {
-                        if (resolved.endsWith(" ")) {
-                            if (!resolved.endsWith("  ")) {
-                                resolved = resolved + " ";
-                            }
-                        } else {
-                            resolved = resolved + "  ";
+                    if (isTitleOrDescriptionContext(contextInterface, text)) {
+                        if (!resolved.startsWith("@")) {
+                            resolved = "@" + resolved;
+                        }
+                    } else if (isVideoSubtitleContext(contextInterface)) {
+                        if (!resolved.endsWith(" ")) {
+                            resolved = resolved + " "; // ONE SPACE
                         }
                     }
                     return newSpanUsingStylingOfAnotherSpan(original, resolved);
@@ -162,7 +174,7 @@ public class ReturnYouTubeUsernamePatch {
     }
 
     /**
-     * Replaces in-text handles (e.g. in live chat rows or video subtitle lines)
+     * Replaces in-text handles (e.g. in live chat rows, video titles, or description lines)
      * while preserving all spans, badges, and formatting, and ensuring appropriate spacing.
      */
     private static CharSequence replaceInTextHandles(ContextInterface contextInterface,
@@ -186,26 +198,36 @@ public class ReturnYouTubeUsernamePatch {
         boolean modified = false;
 
         boolean isVideoSub = isVideoSubtitleContext(contextInterface);
+        boolean isTitleOrDesc = isTitleOrDescriptionContext(contextInterface, text);
 
         // Replace from end to start so earlier indices remain valid
         for (int i = matches.size() - 1; i >= 0; i--) {
             MatchRange m = matches.get(i);
-            String resolved = ChannelResolver.getOrResolveLiveChat(
-                    m.handle, API_KEY.get(), DISPLAY_FORMAT.get());
+            String resolved = isTitleOrDesc
+                    ? ChannelResolver.getOrResolve(m.handle, API_KEY.get(), DISPLAY_FORMAT.get())
+                    : ChannelResolver.getOrResolveLiveChat(m.handle, API_KEY.get(), DISPLAY_FORMAT.get());
 
             if (resolved != null && !resolved.isEmpty() && !resolved.equals(m.handle)) {
-                // Ensure separation if directly followed by non-whitespace (e.g. 觀看次數)
-                if (m.end < ssb.length()) {
-                    char nextChar = ssb.charAt(m.end);
-                    if (!Character.isWhitespace(nextChar) && nextChar != ':' && nextChar != '：'
-                            && nextChar != ',' && nextChar != '，' && nextChar != ')' && nextChar != '）'
-                            && nextChar != ']' && nextChar != '】') {
-                        resolved = resolved + "  ";
-                    } else if (isVideoSub && !resolved.endsWith(" ")) {
-                        resolved = resolved + "  ";
+                if (isTitleOrDesc) {
+                    // For video title and description mentions: keep @ in front: @頻道名稱
+                    if (!resolved.startsWith("@")) {
+                        resolved = "@" + resolved;
                     }
-                } else if (isVideoSub && !resolved.endsWith(" ")) {
-                    resolved = resolved + "  ";
+                } else if (isVideoSub) {
+                    // For video subtitle under player: add a single space separator
+                    if (!resolved.endsWith(" ")) {
+                        resolved = resolved + " ";
+                    }
+                } else {
+                    // For live chat or general in-text handles: separate if followed by non-whitespace
+                    if (m.end < ssb.length()) {
+                        char nextChar = ssb.charAt(m.end);
+                        if (!Character.isWhitespace(nextChar) && nextChar != ':' && nextChar != '：'
+                                && nextChar != ',' && nextChar != '，' && nextChar != ')' && nextChar != '）'
+                                && nextChar != ']' && nextChar != '】') {
+                            resolved = resolved + " ";
+                        }
+                    }
                 }
 
                 ssb.replace(m.start, m.end, resolved);
@@ -278,6 +300,41 @@ public class ReturnYouTubeUsernamePatch {
     }
 
     /**
+     * Checks if this text component is within a video title, video description,
+     * or general content mentions.
+     */
+    private static boolean isTitleOrDescriptionContext(ContextInterface contextInterface, String text) {
+        if (contextInterface != null) {
+            String path = getPath(contextInterface);
+            String identifier = getIdentifier(contextInterface);
+            if (path.contains("title") || identifier.contains("title")
+                    || path.contains("headline") || identifier.contains("headline")
+                    || path.contains("description") || identifier.contains("description")
+                    || path.contains("macro_markers") || identifier.contains("macro_markers")
+                    || path.contains("structured_description") || identifier.contains("structured_description")
+                    || path.contains("mention") || identifier.contains("mention")
+                    || path.contains("expandable") || identifier.contains("expandable")
+                    || path.contains("cell_description") || identifier.contains("cell_description")) {
+                return true;
+            }
+
+            // Outside of chat, comments, and shorts, compound text with @ is title/description/mention
+            if (!path.contains("live_chat") && !path.contains("super_chat")
+                    && !path.contains("comment") && !path.contains("reply")
+                    && !path.contains("reel") && !path.contains("shorts")
+                    && !identifier.contains("live_chat") && !identifier.contains("comment")
+                    && !identifier.contains("reel") && !identifier.contains("shorts")) {
+                if (text != null && text.length() > 5 && text.indexOf('@') >= 0) {
+                    return true;
+                }
+            }
+        } else if (text != null && text.length() > 5 && text.indexOf('@') >= 0) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Determines whether the given text is a YouTube handle in a supported context.
      */
     private static boolean isEligibleHandle(ContextInterface contextInterface, String text) {
@@ -315,6 +372,11 @@ public class ReturnYouTubeUsernamePatch {
                     || path.contains("shorts") || identifier.contains("shorts");
             if (isShorts) {
                 return REPLACE_SHORTS.get();
+            }
+
+            // Priority 4: Title / Description
+            if (isTitleOrDescriptionContext(contextInterface, text)) {
+                return REPLACE_TITLE_DESCRIPTION.get();
             }
         }
 

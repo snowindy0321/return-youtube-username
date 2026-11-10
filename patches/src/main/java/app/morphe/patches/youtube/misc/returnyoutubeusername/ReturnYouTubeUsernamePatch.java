@@ -155,6 +155,13 @@ public class ReturnYouTubeUsernamePatch {
                                 "                android:summaryOn=\"替換聊天室與重播中之 @代號\"\n" +
                                 "                android:summaryOff=\"保留原始 @代號\" />\n" +
                                 "\n" +
+                                "            <SwitchPreference\n" +
+                                "                android:key=\"morphe_return_youtube_username_replace_title_description\"\n" +
+                                "                android:defaultValue=\"true\"\n" +
+                                "                android:title=\"替換影片標題與說明欄提及\"\n" +
+                                "                android:summaryOn=\"將標題與簡介中之 @頻道代碼替換為 @頻道名稱\"\n" +
+                                "                android:summaryOff=\"保留原始 @代號\" />\n" +
+                                "\n" +
                                 "            <EditTextPreference\n" +
                                 "                android:key=\"morphe_return_youtube_username_api_key\"\n" +
                                 "                android:title=\"YouTube Data API v3 Key (選填)\"\n" +

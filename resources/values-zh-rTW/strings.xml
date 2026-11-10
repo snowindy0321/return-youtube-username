@@ -9,6 +9,10 @@
     <string name="morphe_return_youtube_username_replace_comments_summary">在影片留言與回覆中顯示頻道名稱</string>
     <string name="morphe_return_youtube_username_replace_shorts_title">Shorts 短片替換</string>
     <string name="morphe_return_youtube_username_replace_shorts_summary">在 Shorts 介面中將創作者代號替換為頻道名稱</string>
+    <string name="morphe_return_youtube_username_replace_live_chat_title">直播聊天室替換</string>
+    <string name="morphe_return_youtube_username_replace_live_chat_summary">在直播聊天室與聊天重播中顯示頻道名稱</string>
+    <string name="morphe_return_youtube_username_replace_title_description_title">影片標題與說明欄提及替換</string>
+    <string name="morphe_return_youtube_username_replace_title_description_summary">將標題與簡介中之 @頻道代碼替換為 @頻道名稱</string>
     <string name="morphe_return_youtube_username_replace_all_handles_title">替換所有代號</string>
     <string name="morphe_return_youtube_username_replace_all_handles_summary">在應用程式其他介面也替換 @代號</string>
     <string name="morphe_return_youtube_username_api_key_title">YouTube Data API v3 金鑰</string>
