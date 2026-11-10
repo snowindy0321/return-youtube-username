@@ -27,7 +27,7 @@ public final class ChannelResolver {
 
     private static final String PREF_NAME = "morphe_ryu_channel_cache";
     private static final int NETWORK_TIMEOUT_MS = 3500;
-    private static final int BLOCKING_TIMEOUT_MS = 600;
+    private static final int BLOCKING_TIMEOUT_MS = 800;
 
     private static final Pattern OG_TITLE_PATTERN_1 =
             Pattern.compile("<meta\\s+[^>]*property=[\"']og:title[\"'][^>]*content=[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
@@ -110,9 +110,10 @@ public final class ChannelResolver {
 
     /**
      * Resolves a handle specifically for live chat.
-     * If cached, returns the real channel name.
-     * If not yet cached, initiates background prefetch and returns the handle without '@',
-     * ensuring immediate removal of the '@' symbol without blocking the live chat stream.
+     * If cached, returns the real channel name immediately.
+     * If not yet cached, initiates resolution and waits with a bounded timeout
+     * so that the real channel name can be displayed on the initial render pass.
+     * If timed out, falls back to the handle without '@'.
      */
     public static String getOrResolveLiveChat(String handle, String apiKey, int format) {
         if (handle == null || handle.isEmpty()) return handle;
@@ -144,10 +145,18 @@ public final class ChannelResolver {
             }
         }
 
-        // 3. Initiate non-blocking background fetch
-        prefetch(cleanHandle, apiKey);
+        // 3. Initiate resolution and wait with a bounded timeout (on background layout thread)
+        Future<String> future = resolveAsync(cleanHandle, apiKey);
+        try {
+            String resolved = future.get(BLOCKING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (resolved != null && !resolved.isEmpty()) {
+                return formatName(cleanHandle, resolved, format);
+            }
+        } catch (Exception ignored) {
+            // Timed out or fetch error: fallback to handle without '@'
+        }
 
-        // Immediately return handle without '@'
+        // Fallback: return handle without '@'
         if (cleanHandle.startsWith("@") && cleanHandle.length() > 1) {
             return cleanHandle.substring(1);
         }
@@ -268,9 +277,45 @@ public final class ChannelResolver {
             if (code == 200) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
                 StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line).append('\n');
+                char[] buf = new char[8192];
+                int charsRead;
+                int totalChars = 0;
+                while ((charsRead = reader.read(buf, 0, buf.length)) != -1) {
+                    sb.append(buf, 0, charsRead);
+                    totalChars += charsRead;
+
+                    // Early exit check once metadata section is reached
+                    if (totalChars >= 16384) {
+                        String current = sb.toString();
+                        Matcher m = OG_TITLE_PATTERN_1.matcher(current);
+                        if (m.find()) {
+                            String name = m.group(1).trim();
+                            if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) {
+                                reader.close();
+                                return name;
+                            }
+                        }
+                        m = OG_TITLE_PATTERN_2.matcher(current);
+                        if (m.find()) {
+                            String name = m.group(1).trim();
+                            if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) {
+                                reader.close();
+                                return name;
+                            }
+                        }
+                        m = CHANNEL_TITLE_XML_PATTERN.matcher(current);
+                        while (m.find()) {
+                            String name = m.group(1).trim();
+                            if (name.endsWith(" - YouTube")) {
+                                name = name.substring(0, name.length() - 10).trim();
+                            }
+                            if (!name.isEmpty() && !name.equalsIgnoreCase("YouTube")) {
+                                reader.close();
+                                return name;
+                            }
+                        }
+                    }
+                    if (totalChars > 450000) break;
                 }
                 reader.close();
 
@@ -291,7 +336,7 @@ public final class ChannelResolver {
                     if (!name.isEmpty()) return name;
                 }
                 m = CHANNEL_TITLE_XML_PATTERN.matcher(html);
-                if (m.find()) {
+                while (m.find()) {
                     String name = m.group(1).trim();
                     if (name.endsWith(" - YouTube")) {
                         name = name.substring(0, name.length() - 10).trim();

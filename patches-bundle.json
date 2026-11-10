@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-10T10:45:00",
-  "description": "## Return YouTube Username v2.2.6\n\n- Support Live Chat & Chat Replay: Replaces YouTube handles (@handle) with actual channel names (or clean usernames without @) in Live Chat messages, Chat Replays (聊天重播), Super Chats, and the live chat pinned/action bar.\n- Non-blocking instant resolution: Immediately removes '@' on arrival while fetching and caching official channel names asynchronously in the background, preserving 100% of badges, emojis, and formatting without stuttering.\n- Dedicated Switch: Added '替換直播聊天室使用者名稱' under Morphe settings.\n- Pure Standalone Morphe Patch Bundle (~21 KB): Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.6/return-youtube-username.mpp",
+  "created_at": "2026-11-10T11:20:00",
+  "description": "## Return YouTube Username v2.2.7\n\n- Fix Active Live Chat Name Resolution: Fixed an issue where active live broadcasts only stripped the '@' symbol without displaying the real channel name. Now properly resolves and caches official channel names on the background layout thread with fast early-termination stream parsing.\n- Performance Optimization: HTML stream parsing now breaks immediately upon extracting channel metadata (saving ~80-100KB per request and reducing latency to ~500ms).\n- Pure Standalone Morphe Patch Bundle (~21 KB): Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.7/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.6",
+  "version": "2.2.7",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }
