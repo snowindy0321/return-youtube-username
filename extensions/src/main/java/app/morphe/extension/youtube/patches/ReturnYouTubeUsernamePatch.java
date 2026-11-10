@@ -95,8 +95,9 @@ public class ReturnYouTubeUsernamePatch {
                 return;
             }
 
-            // 2. Live chat handles
-            if (REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text)) {
+            // 2. Live chat & video subtitle in-text handles
+            if ((REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text))
+                    || (isVideoSubtitleContext(contextInterface) && text.indexOf('@') >= 0)) {
                 Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
                 while (matcher.find()) {
                     String handle = matcher.group(1);
@@ -130,17 +131,27 @@ public class ReturnYouTubeUsernamePatch {
                 }
             }
 
-            // 1. Live Chat handle replacement
-            if (REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text)) {
-                return replaceLiveChatHandles(original);
+            // 1. In-text handle replacement (Live Chat, Super Chat, or video subtitle with in-text handles)
+            if ((REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text))
+                    || (isVideoSubtitleContext(contextInterface) && text.indexOf('@') >= 0)) {
+                return replaceInTextHandles(contextInterface, original);
             }
 
-            // 2. Standalone handle replacement (Comments, Shorts uploaders)
+            // 2. Standalone handle replacement (Comments, Shorts uploaders, video metadata)
             String stripped = stripWhitespace(text);
             if (isEligibleHandle(contextInterface, stripped)) {
                 int format = DISPLAY_FORMAT.get();
                 String resolved = ChannelResolver.getOrResolve(stripped, API_KEY.get(), format);
                 if (resolved != null && !resolved.isEmpty() && !resolved.equals(stripped)) {
+                    if (isVideoSubtitleContext(contextInterface)) {
+                        if (resolved.endsWith(" ")) {
+                            if (!resolved.endsWith("  ")) {
+                                resolved = resolved + " ";
+                            }
+                        } else {
+                            resolved = resolved + "  ";
+                        }
+                    }
                     return newSpanUsingStylingOfAnotherSpan(original, resolved);
                 }
             }
@@ -151,9 +162,11 @@ public class ReturnYouTubeUsernamePatch {
     }
 
     /**
-     * Replaces handles in live chat rows while preserving all spans, badges, and formatting.
+     * Replaces in-text handles (e.g. in live chat rows or video subtitle lines)
+     * while preserving all spans, badges, and formatting, and ensuring appropriate spacing.
      */
-    private static CharSequence replaceLiveChatHandles(CharSequence original) {
+    private static CharSequence replaceInTextHandles(ContextInterface contextInterface,
+                                                     CharSequence original) {
         String text = original.toString();
         Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
 
@@ -172,6 +185,8 @@ public class ReturnYouTubeUsernamePatch {
         SpannableStringBuilder ssb = new SpannableStringBuilder(original);
         boolean modified = false;
 
+        boolean isVideoSub = isVideoSubtitleContext(contextInterface);
+
         // Replace from end to start so earlier indices remain valid
         for (int i = matches.size() - 1; i >= 0; i--) {
             MatchRange m = matches.get(i);
@@ -179,6 +194,20 @@ public class ReturnYouTubeUsernamePatch {
                     m.handle, API_KEY.get(), DISPLAY_FORMAT.get());
 
             if (resolved != null && !resolved.isEmpty() && !resolved.equals(m.handle)) {
+                // Ensure separation if directly followed by non-whitespace (e.g. 觀看次數)
+                if (m.end < ssb.length()) {
+                    char nextChar = ssb.charAt(m.end);
+                    if (!Character.isWhitespace(nextChar) && nextChar != ':' && nextChar != '：'
+                            && nextChar != ',' && nextChar != '，' && nextChar != ')' && nextChar != '）'
+                            && nextChar != ']' && nextChar != '】') {
+                        resolved = resolved + "  ";
+                    } else if (isVideoSub && !resolved.endsWith(" ")) {
+                        resolved = resolved + "  ";
+                    }
+                } else if (isVideoSub && !resolved.endsWith(" ")) {
+                    resolved = resolved + "  ";
+                }
+
                 ssb.replace(m.start, m.end, resolved);
                 modified = true;
             }
@@ -224,6 +253,28 @@ public class ReturnYouTubeUsernamePatch {
             if (id != null) return id.toLowerCase(Locale.ENGLISH);
         } catch (Exception ignored) {}
         return "";
+    }
+
+    /**
+     * Checks if this text component is within video metadata / video subtitle
+     * (the uploader and stats line right below the video player).
+     */
+    private static boolean isVideoSubtitleContext(ContextInterface contextInterface) {
+        if (contextInterface == null) return false;
+        String path = getPath(contextInterface);
+        String identifier = getIdentifier(contextInterface);
+        return path.contains("video_subtitle")
+                || path.contains("video_metadata")
+                || path.contains("slim_video")
+                || path.contains("video_info")
+                || path.contains("video_details")
+                || path.contains("subtitle")
+                || identifier.contains("video_subtitle")
+                || identifier.contains("video_metadata")
+                || identifier.contains("slim_video")
+                || identifier.contains("video_info")
+                || identifier.contains("video_details")
+                || identifier.contains("subtitle");
     }
 
     /**
