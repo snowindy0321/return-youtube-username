@@ -9,6 +9,9 @@ public class Utils {
         return false;
     }
 
+    public static void setContext(Context context) {
+    }
+
     public static Context getContext() {
         return null;
     }

@@ -78,7 +78,42 @@ public class ReturnYouTubeUsernamePatch {
                         t.printStackTrace();
                     }
 
-                    // 2. Add independent Settings Screen via official Morphe AddOn Preferences
+                    // 2. Hook Application / Activity init to ensure ReturnYouTubeUsernamePatch is loaded early
+                    // This pre-registers all settings before Morphe AbstractPreferenceFragment reads them.
+                    try {
+                        Class<?> appInitClass = findClass(ctx, "app.morphe.patches.youtube.misc.extension.hooks.ApplicationInitHookKt");
+                        if (appInitClass != null) {
+                            try {
+                                Method getHook = appInitClass.getMethod("getApplicationInitHook");
+                                Object hook = getHook.invoke(null);
+                                if (hook != null) {
+                                    Method invokeMethod = hook.getClass().getMethod("invoke", String.class);
+                                    invokeMethod.invoke(hook, EXTENSION_CLASS);
+                                    System.out.println("[+] Successfully hooked ApplicationInitHook with " + EXTENSION_CLASS);
+                                }
+                            } catch (Throwable t) {
+                                System.err.println("[!] ApplicationInitHook failed: " + t);
+                            }
+
+                            try {
+                                Method getOnCreateHook = appInitClass.getMethod("getApplicationInitOnCreateHook");
+                                Object onCreateHook = getOnCreateHook.invoke(null);
+                                if (onCreateHook != null) {
+                                    Method invokeMethod = onCreateHook.getClass().getMethod("invoke", String.class);
+                                    invokeMethod.invoke(onCreateHook, EXTENSION_CLASS);
+                                    System.out.println("[+] Successfully hooked ApplicationInitOnCreateHook with " + EXTENSION_CLASS);
+                                }
+                            } catch (Throwable t) {
+                                System.err.println("[!] ApplicationInitOnCreateHook failed: " + t);
+                            }
+                        } else {
+                            System.err.println("[!] ApplicationInitHookKt not found in any ClassLoader!");
+                        }
+                    } catch (Throwable t) {
+                        System.err.println("[!] Error hooking ApplicationInit: " + t);
+                    }
+
+                    // 3. Add independent Settings Screen via official Morphe AddOn Preferences
                     try {
                         File prefsFile = PatchFunctionsKt.resourceFile("morphe_addon_prefs.xml", false);
                         String addonPrefs = "<morphe-add-on-preferences>\n" +

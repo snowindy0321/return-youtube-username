@@ -36,8 +36,17 @@ public class ReturnYouTubeUsernamePatch {
     public static final BooleanSetting REPLACE_SHORTS =
             new BooleanSetting("morphe_return_youtube_username_replace_shorts", true);
 
-    public static final BooleanSetting REPLACE_ALL_HANDLES =
-            new BooleanSetting("morphe_return_youtube_username_replace_all_handles", true);
+    /**
+     * Entry point called on application / activity initialization.
+     * Ensures this class is loaded and all Settings are registered into Morphe's Setting registry
+     * before any preference fragments are inflated.
+     */
+    public static void setContext(android.content.Context context) {
+        try {
+            app.morphe.extension.shared.Utils.setContext(context);
+        } catch (Throwable ignored) {
+        }
+    }
 
     // YouTube handle regex: starts with @ followed by Unicode letters/numbers/marks and punctuation allowed in handles
     private static final Pattern HANDLE_PATTERN =
@@ -151,6 +160,8 @@ public class ReturnYouTubeUsernamePatch {
 
         return path.contains("page_header")
                 || path.contains("content_metadata")
+                || path.contains("lockup_metadata")
+                || path.contains("metadata_content")
                 || path.contains("profile_card")
                 || path.contains("profilecard")
                 || path.contains("channel_profile")
@@ -160,10 +171,12 @@ public class ReturnYouTubeUsernamePatch {
                 || path.contains("channel_about")
                 || path.contains("about_channel")
                 || path.contains("profile_sheet")
-                || path.contains("bottom_sheet_header")
+                || path.contains("bottom_sheet")
                 || path.contains("cairo_channel_header")
                 || identifier.contains("page_header")
                 || identifier.contains("content_metadata")
+                || identifier.contains("lockup_metadata")
+                || identifier.contains("metadata_content")
                 || identifier.contains("profile_card")
                 || identifier.contains("profilecard")
                 || identifier.contains("channel_profile")
@@ -173,7 +186,7 @@ public class ReturnYouTubeUsernamePatch {
                 || identifier.contains("channel_about")
                 || identifier.contains("about_channel")
                 || identifier.contains("profile_sheet")
-                || identifier.contains("bottom_sheet_header")
+                || identifier.contains("bottom_sheet")
                 || identifier.contains("cairo_channel_header");
     }
 

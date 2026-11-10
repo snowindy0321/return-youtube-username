@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-10T08:55:00",
-  "description": "## Return YouTube Username v2.2.4\n\n- Fix Settings Menu Alignment (跑版): Use official @layout/preference_with_icon and remove summary from top-level PreferenceScreen to match Morphe's native single-line style and icon layout.\n- Remove Redundant Option: Eliminated '替換全域所有 @代號' (Replace all handles globally) which was redundant with the dedicated comment and Shorts switches, simplifying settings to 4 clear, focused options.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.4/return-youtube-username.mpp",
+  "created_at": "2026-11-10T10:00:00",
+  "description": "## Return YouTube Username v2.2.5\n\n- Fix AbstractPreferenceFragment Toast Error: Hooked ApplicationInitHook & ApplicationInitOnCreateHook so ReturnYouTubeUsernamePatch is initialized early on app launch, pre-registering all settings keys into Morphe's Setting registry and eliminating 'Preference key has no setting' toasts.\n- Fix Channel Profile Handle Replacement: Added lockup_metadata, metadata_content, and bottom_sheet to exclusion filters, preventing the channel's @handle beneath the channel name from being redundantly replaced with the channel name.\n- Cleaned up unused legacy setting fields.\n- Pure Standalone Morphe Patch Bundle (~20 KB): Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.5/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }
