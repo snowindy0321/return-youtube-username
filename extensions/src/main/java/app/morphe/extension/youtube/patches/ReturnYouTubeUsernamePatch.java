@@ -14,6 +14,7 @@ import app.morphe.extension.shared.Logger;
 import app.morphe.extension.shared.patches.components.ContextInterface;
 import app.morphe.extension.shared.settings.BooleanSetting;
 import app.morphe.extension.shared.settings.IntegerSetting;
+import app.morphe.extension.shared.settings.Setting;
 import app.morphe.extension.shared.settings.StringSetting;
 import app.morphe.extension.youtube.patches.returnyoutubeusername.ChannelResolver;
 import app.morphe.extension.youtube.patches.returnyoutubeusername.DisplayFormat;
@@ -29,22 +30,22 @@ public class ReturnYouTubeUsernamePatch {
             new BooleanSetting("morphe_return_youtube_username_enabled", true);
 
     public static final IntegerSetting DISPLAY_FORMAT =
-            new IntegerSetting("morphe_return_youtube_username_display_format", 0);
+            new IntegerSetting("morphe_return_youtube_username_display_format", 0, Setting.parent(ENABLED));
 
     public static final StringSetting API_KEY =
-            new StringSetting("morphe_return_youtube_username_api_key", "");
+            new StringSetting("morphe_return_youtube_username_api_key", "", Setting.parent(ENABLED));
 
     public static final BooleanSetting REPLACE_COMMENTS =
-            new BooleanSetting("morphe_return_youtube_username_replace_comments", true);
+            new BooleanSetting("morphe_return_youtube_username_replace_comments", true, Setting.parent(ENABLED));
 
     public static final BooleanSetting REPLACE_SHORTS =
-            new BooleanSetting("morphe_return_youtube_username_replace_shorts", true);
+            new BooleanSetting("morphe_return_youtube_username_replace_shorts", true, Setting.parent(ENABLED));
 
     public static final BooleanSetting REPLACE_LIVE_CHAT =
-            new BooleanSetting("morphe_return_youtube_username_replace_live_chat", true);
+            new BooleanSetting("morphe_return_youtube_username_replace_live_chat", true, Setting.parent(ENABLED));
 
     public static final BooleanSetting REPLACE_TITLE_DESCRIPTION =
-            new BooleanSetting("morphe_return_youtube_username_replace_title_description", true);
+            new BooleanSetting("morphe_return_youtube_username_replace_title_description", true, Setting.parent(ENABLED));
 
     /**
      * Entry point called on application / activity initialization.
