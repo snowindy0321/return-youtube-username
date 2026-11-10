@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-10T15:05:00",
-  "description": "## Return YouTube Username v2.2.9\n\n- Support Video Title & Description Mentions: Replaces channel handle mentions (@handle) in video titles and description boxes with the actual channel name (@ChannelName), keeping the '@' symbol.\n- Refined Subtitle Spacing: Changed spacing between channel name and view count under the video to a clean single space.\n- Dedicated Setting: Added '替換影片標題與說明欄提及' switch under Morphe settings.\n- Pure Standalone Morphe Patch Bundle (~21 KB): Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.9/return-youtube-username.mpp",
+  "created_at": "2026-11-10T15:37:00",
+  "description": "## Return YouTube Username v2.2.10\n\n- Fix Mention Preview Card Handle Duplication: When clicking channel mentions in titles or descriptions, the bottom sheet preview card will now properly keep the channel's actual handle (@handle) below the channel name instead of replacing it with the channel name.\n- Support Video Title & Description Mentions: Replaces channel handle mentions (@handle) in video titles and description boxes with the actual channel name (@ChannelName), keeping the '@' symbol.\n- Refined Subtitle Spacing: Spacing between channel name and view count under the video is separated by a clean single space.\n- Pure Standalone Morphe Patch Bundle (~21 KB): Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.10/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }

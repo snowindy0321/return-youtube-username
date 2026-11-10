@@ -138,8 +138,12 @@ public class ReturnYouTubeUsernamePatch {
                 }
             }
 
+            String stripped = stripWhitespace(text);
+            boolean isStandaloneHandle = (stripped != null && HANDLE_PATTERN.matcher(stripped).matches());
+
             // 1. In-text handle replacement (Live Chat, Title, Description, or Video Subtitle)
-            if (text.indexOf('@') >= 0) {
+            // Standalone handles are skipped here unless it is live chat, so they don't get accidentally replaced as titles
+            if (text.indexOf('@') >= 0 && (!isStandaloneHandle || isLiveChatContext(contextInterface, text))) {
                 boolean isLiveChat = REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text);
                 boolean isTitleDesc = REPLACE_TITLE_DESCRIPTION.get() && isTitleOrDescriptionContext(contextInterface, text);
                 boolean isVideoSub = isVideoSubtitleContext(contextInterface);
@@ -150,7 +154,6 @@ public class ReturnYouTubeUsernamePatch {
             }
 
             // 2. Standalone handle replacement (Comments, Shorts uploaders, video metadata, title/description)
-            String stripped = stripWhitespace(text);
             if (isEligibleHandle(contextInterface, stripped)) {
                 int format = DISPLAY_FORMAT.get();
                 String resolved = ChannelResolver.getOrResolve(stripped, API_KEY.get(), format);
@@ -304,32 +307,51 @@ public class ReturnYouTubeUsernamePatch {
      * or general content mentions.
      */
     private static boolean isTitleOrDescriptionContext(ContextInterface contextInterface, String text) {
-        if (contextInterface != null) {
-            String path = getPath(contextInterface);
-            String identifier = getIdentifier(contextInterface);
-            if (path.contains("title") || identifier.contains("title")
-                    || path.contains("headline") || identifier.contains("headline")
-                    || path.contains("description") || identifier.contains("description")
-                    || path.contains("macro_markers") || identifier.contains("macro_markers")
-                    || path.contains("structured_description") || identifier.contains("structured_description")
-                    || path.contains("mention") || identifier.contains("mention")
-                    || path.contains("expandable") || identifier.contains("expandable")
-                    || path.contains("cell_description") || identifier.contains("cell_description")) {
-                return true;
-            }
+        if (contextInterface == null) return false;
 
-            // Outside of chat, comments, and shorts, compound text with @ is title/description/mention
+        String path = getPath(contextInterface);
+        String identifier = getIdentifier(contextInterface);
+
+        // Channel profile headers, preview cards, and profile sheets are NEVER title/description!
+        if (isChannelProfileHeader(path, identifier)) {
+            return false;
+        }
+
+        // If it's a standalone handle (e.g. "@Karsa0214"), it is NEVER a title or description sentence
+        // unless explicitly indicated by video_title or headline.
+        String stripped = stripWhitespace(text);
+        boolean isStandaloneHandle = (stripped != null && HANDLE_PATTERN.matcher(stripped).matches());
+        if (isStandaloneHandle) {
+            if (!path.contains("video_title") && !identifier.contains("video_title")
+                    && !path.contains("headline") && !identifier.contains("headline")) {
+                return false;
+            }
+        }
+
+        if (path.contains("video_title") || identifier.contains("video_title")
+                || path.contains("title") || identifier.contains("title")
+                || path.contains("headline") || identifier.contains("headline")
+                || path.contains("description") || identifier.contains("description")
+                || path.contains("macro_markers") || identifier.contains("macro_markers")
+                || path.contains("structured_description") || identifier.contains("structured_description")
+                || path.contains("expandable") || identifier.contains("expandable")
+                || path.contains("cell_description") || identifier.contains("cell_description")) {
+            return true;
+        }
+
+        // Outside of chat, comments, shorts, and channel pages: compound text with @ is title/description
+        if (!isStandaloneHandle) {
             if (!path.contains("live_chat") && !path.contains("super_chat")
                     && !path.contains("comment") && !path.contains("reply")
                     && !path.contains("reel") && !path.contains("shorts")
+                    && !path.contains("channel") && !identifier.contains("channel")
+                    && !path.contains("profile") && !identifier.contains("profile")
                     && !identifier.contains("live_chat") && !identifier.contains("comment")
                     && !identifier.contains("reel") && !identifier.contains("shorts")) {
                 if (text != null && text.length() > 5 && text.indexOf('@') >= 0) {
                     return true;
                 }
             }
-        } else if (text != null && text.length() > 5 && text.indexOf('@') >= 0) {
-            return true;
         }
         return false;
     }
@@ -351,8 +373,18 @@ public class ReturnYouTubeUsernamePatch {
             String path = getPath(contextInterface);
             String identifier = getIdentifier(contextInterface);
 
-            // Priority 1: Channel profile header / bottom sheet (Image 2 vs Image 3)
+            // Priority 1: Channel profile header / preview card / bottom sheet (Image 2 vs Image 3, Image 10)
             if (isChannelProfileHeader(path, identifier)) {
+                return false;
+            }
+
+            // Channel elements (pages, previews, cards) are never comments or shorts
+            if ((path.contains("channel") || identifier.contains("channel")
+                    || path.contains("profile") || identifier.contains("profile"))
+                    && !path.contains("comment") && !identifier.contains("comment")
+                    && !path.contains("reply") && !identifier.contains("reply")
+                    && !path.contains("reel") && !identifier.contains("reel")
+                    && !path.contains("shorts") && !identifier.contains("shorts")) {
                 return false;
             }
 
@@ -378,6 +410,11 @@ public class ReturnYouTubeUsernamePatch {
             if (isTitleOrDescriptionContext(contextInterface, text)) {
                 return REPLACE_TITLE_DESCRIPTION.get();
             }
+
+            // Priority 5: Video subtitle
+            if (isVideoSubtitleContext(contextInterface)) {
+                return true;
+            }
         }
 
         // Default to REPLACE_COMMENTS for comments, replies, community posts, and other content
@@ -387,6 +424,13 @@ public class ReturnYouTubeUsernamePatch {
     private static boolean isChannelProfileHeader(String path, String identifier) {
         if (path == null) path = "";
         if (identifier == null) identifier = "";
+
+        // Descriptions and video titles are never channel profile headers
+        if (path.contains("description") || identifier.contains("description")
+                || path.contains("video_title") || identifier.contains("video_title")
+                || path.contains("headline") || identifier.contains("headline")) {
+            return false;
+        }
 
         return path.contains("page_header")
                 || path.contains("content_metadata")
@@ -401,8 +445,16 @@ public class ReturnYouTubeUsernamePatch {
                 || path.contains("channel_about")
                 || path.contains("about_channel")
                 || path.contains("profile_sheet")
-                || path.contains("bottom_sheet")
+                || path.contains("channel_sheet")
                 || path.contains("cairo_channel_header")
+                || path.contains("preview")
+                || path.contains("channel_preview")
+                || path.contains("channelpreview")
+                || path.contains("user_card")
+                || path.contains("user_preview")
+                || path.contains("channel_summary")
+                || path.contains("channel_info")
+                || path.contains("channel_details")
                 || identifier.contains("page_header")
                 || identifier.contains("content_metadata")
                 || identifier.contains("lockup_metadata")
@@ -416,8 +468,16 @@ public class ReturnYouTubeUsernamePatch {
                 || identifier.contains("channel_about")
                 || identifier.contains("about_channel")
                 || identifier.contains("profile_sheet")
-                || identifier.contains("bottom_sheet")
-                || identifier.contains("cairo_channel_header");
+                || identifier.contains("channel_sheet")
+                || identifier.contains("cairo_channel_header")
+                || identifier.contains("preview")
+                || identifier.contains("channel_preview")
+                || identifier.contains("channelpreview")
+                || identifier.contains("user_card")
+                || identifier.contains("user_preview")
+                || identifier.contains("channel_summary")
+                || identifier.contains("channel_info")
+                || identifier.contains("channel_details");
     }
 
     private static String stripWhitespace(String text) {
