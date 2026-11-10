@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-10T08:30:00",
-  "description": "## Return YouTube Username v2.2.3\n\n- Fix Channel Profile Card Exclusion: Properly identify Profile Card bottom sheets and page headers when opened from comments or search, preventing the handle subtitle (@handle) under the channel name from being replaced.\n- Keep Comments & Shorts 100% Functional: Fully preserves comment handle replacement and CJK / Unicode resolution.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Zero conflict: seamlessly loads and patches alongside official Morphe patches on Morphe Manager (Android) and Morphe CLI.\n- Independent Settings Menu: Dedicated 'Return YouTube Username' screen in Morphe settings.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.3/return-youtube-username.mpp",
+  "created_at": "2026-11-10T08:55:00",
+  "description": "## Return YouTube Username v2.2.4\n\n- Fix Settings Menu Alignment (跑版): Use official @layout/preference_with_icon and remove summary from top-level PreferenceScreen to match Morphe's native single-line style and icon layout.\n- Remove Redundant Option: Eliminated '替換全域所有 @代號' (Replace all handles globally) which was redundant with the dedicated comment and Shorts switches, simplifying settings to 4 clear, focused options.\n- Pure Standalone Morphe Patch Bundle: Only contains Return YouTube Username without duplicating official patches.\n- Fully compatible with Morphe 2.1.0+ and YouTube 21.30.216.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.2.4/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }

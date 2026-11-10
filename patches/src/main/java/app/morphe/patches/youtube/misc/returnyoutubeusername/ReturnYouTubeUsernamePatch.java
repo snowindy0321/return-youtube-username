@@ -88,9 +88,8 @@ public class ReturnYouTubeUsernamePatch {
                                 "            xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n" +
                                 "            android:key=\"morphe_settings_screen_return_youtube_username\"\n" +
                                 "            android:title=\"Return YouTube Username\"\n" +
-                                "            android:summary=\"還原留言區與 Shorts 之使用者名稱 (@handle) 為頻道名稱\"\n" +
                                 "            android:icon=\"@drawable/morphe_settings_screen_11_misc\"\n" +
-                                "            app:icon=\"@drawable/morphe_settings_screen_11_misc\"\n" +
+                                "            android:layout=\"@layout/preference_with_icon\"\n" +
                                 "            app:iconSpaceReserved=\"true\">\n" +
                                 "\n" +
                                 "            <SwitchPreference\n" +
@@ -113,13 +112,6 @@ public class ReturnYouTubeUsernamePatch {
                                 "                android:title=\"替換 Shorts 上傳者名稱\"\n" +
                                 "                android:summaryOn=\"顯示 Shorts 原作者頻道名稱\"\n" +
                                 "                android:summaryOff=\"保留原始 @代號\" />\n" +
-                                "\n" +
-                                "            <SwitchPreference\n" +
-                                "                android:key=\"morphe_return_youtube_username_replace_all_handles\"\n" +
-                                "                android:defaultValue=\"true\"\n" +
-                                "                android:title=\"替換全域所有 @代號\"\n" +
-                                "                android:summaryOn=\"包含社群貼文、提及等所有可解析之 Handle\"\n" +
-                                "                android:summaryOff=\"僅替換留言與 Shorts\" />\n" +
                                 "\n" +
                                 "            <EditTextPreference\n" +
                                 "                android:key=\"morphe_return_youtube_username_api_key\"\n" +

@@ -141,7 +141,8 @@ public class ReturnYouTubeUsernamePatch {
             }
         }
 
-        return REPLACE_ALL_HANDLES.get();
+        // Default to REPLACE_COMMENTS for comments, replies, community posts, and other content
+        return REPLACE_COMMENTS.get();
     }
 
     private static boolean isChannelProfileHeader(String path, String identifier) {
