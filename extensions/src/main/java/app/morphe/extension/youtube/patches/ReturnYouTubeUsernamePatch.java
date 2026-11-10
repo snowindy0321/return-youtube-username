@@ -318,7 +318,7 @@ public class ReturnYouTubeUsernamePatch {
             return false;
         }
 
-        // If it's a standalone handle (e.g. "@Karsa0214"), it is NEVER a title or description sentence
+        // If it's a standalone handle (e.g. "@channel_handle"), it is NEVER a title or description sentence
         // unless explicitly indicated by video_title or headline.
         String stripped = stripWhitespace(text);
         boolean isStandaloneHandle = (stripped != null && HANDLE_PATTERN.matcher(stripped).matches());
