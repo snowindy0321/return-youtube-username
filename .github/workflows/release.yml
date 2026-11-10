@@ -68,7 +68,7 @@ jobs:
           import json, datetime
           data = {
               'created_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
-              'description': f'## Return YouTube Username {TAG}\n\n- Replace YouTube @handles with original channel names in comments, Shorts, and across the app.\n- Zero-config public scraper + optional YouTube Data API v3 key.\n- Built for YouTube 21.30.216 & Morphe 2.1.0.',
+              'description': f'## Return YouTube Username {TAG}\n\n- Replace YouTube `@handle` with original channel names in comments, Shorts, and across the app.\n- Zero-config public scraper + optional YouTube Data API v3 key.\n- Built for YouTube 21.30.216 & Morphe 2.1.0.',
               'download_url': f'https://github.com/${{ github.repository }}/releases/download/{TAG}/return-youtube-username.mpp',
               'signature_download_url': '',
               'version': VER,
