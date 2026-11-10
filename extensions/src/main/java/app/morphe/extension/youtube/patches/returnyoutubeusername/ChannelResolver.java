@@ -109,6 +109,52 @@ public final class ChannelResolver {
     }
 
     /**
+     * Resolves a handle specifically for live chat.
+     * If cached, returns the real channel name.
+     * If not yet cached, initiates background prefetch and returns the handle without '@',
+     * ensuring immediate removal of the '@' symbol without blocking the live chat stream.
+     */
+    public static String getOrResolveLiveChat(String handle, String apiKey, int format) {
+        if (handle == null || handle.isEmpty()) return handle;
+
+        String cleanHandle = handle.trim();
+        String normalizedKey = cleanHandle.toLowerCase(Locale.ROOT);
+
+        // 1. Check in-memory cache
+        String cachedName = cache.get(normalizedKey);
+        if (cachedName != null) {
+            if (cachedName.isEmpty()) {
+                return cleanHandle.startsWith("@") && cleanHandle.length() > 1
+                        ? cleanHandle.substring(1) : cleanHandle;
+            }
+            return formatName(cleanHandle, cachedName, format);
+        }
+
+        // 2. Check disk / SharedPreferences cache
+        SharedPreferences sp = getPreferences();
+        if (sp != null) {
+            String diskCached = sp.getString(normalizedKey, null);
+            if (diskCached != null) {
+                cache.put(normalizedKey, diskCached);
+                if (diskCached.isEmpty()) {
+                    return cleanHandle.startsWith("@") && cleanHandle.length() > 1
+                            ? cleanHandle.substring(1) : cleanHandle;
+                }
+                return formatName(cleanHandle, diskCached, format);
+            }
+        }
+
+        // 3. Initiate non-blocking background fetch
+        prefetch(cleanHandle, apiKey);
+
+        // Immediately return handle without '@'
+        if (cleanHandle.startsWith("@") && cleanHandle.length() > 1) {
+            return cleanHandle.substring(1);
+        }
+        return cleanHandle;
+    }
+
+    /**
      * Pre-fetches channel name for a handle in background without blocking.
      */
     public static void prefetch(String handle, String apiKey) {

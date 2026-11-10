@@ -148,6 +148,13 @@ public class ReturnYouTubeUsernamePatch {
                                 "                android:summaryOn=\"顯示 Shorts 原作者頻道名稱\"\n" +
                                 "                android:summaryOff=\"保留原始 @代號\" />\n" +
                                 "\n" +
+                                "            <SwitchPreference\n" +
+                                "                android:key=\"morphe_return_youtube_username_replace_live_chat\"\n" +
+                                "                android:defaultValue=\"true\"\n" +
+                                "                android:title=\"替換直播聊天室使用者名稱\"\n" +
+                                "                android:summaryOn=\"替換聊天室與重播中之 @代號\"\n" +
+                                "                android:summaryOff=\"保留原始 @代號\" />\n" +
+                                "\n" +
                                 "            <EditTextPreference\n" +
                                 "                android:key=\"morphe_return_youtube_username_api_key\"\n" +
                                 "                android:title=\"YouTube Data API v3 Key (選填)\"\n" +

@@ -1,9 +1,13 @@
 package app.morphe.extension.youtube.patches;
 
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import app.morphe.extension.shared.Logger;
@@ -16,7 +20,7 @@ import app.morphe.extension.youtube.patches.returnyoutubeusername.DisplayFormat;
 
 /**
  * Replaces YouTube handles (@handle) with original channel names
- * across comments, Shorts uploaders, and handles throughout the app.
+ * across comments, Shorts uploaders, live chat messages, and handles throughout the app.
  */
 @SuppressWarnings("unused")
 public class ReturnYouTubeUsernamePatch {
@@ -36,6 +40,9 @@ public class ReturnYouTubeUsernamePatch {
     public static final BooleanSetting REPLACE_SHORTS =
             new BooleanSetting("morphe_return_youtube_username_replace_shorts", true);
 
+    public static final BooleanSetting REPLACE_LIVE_CHAT =
+            new BooleanSetting("morphe_return_youtube_username_replace_live_chat", true);
+
     /**
      * Entry point called on application / activity initialization.
      * Ensures this class is loaded and all Settings are registered into Morphe's Setting registry
@@ -48,9 +55,25 @@ public class ReturnYouTubeUsernamePatch {
         }
     }
 
-    // YouTube handle regex: starts with @ followed by Unicode letters/numbers/marks and punctuation allowed in handles
+    // YouTube handle regex: starts with @ followed by characters allowed in handles
     private static final Pattern HANDLE_PATTERN =
             Pattern.compile("^@[^\\s/@#%&?+:;!\"'()\\[\\]{}<>=]+$");
+
+    // YouTube handle within live chat text or messages: starts at line begin or preceded by space/punctuation
+    private static final Pattern IN_TEXT_HANDLE_PATTERN =
+            Pattern.compile("(?:^|[\\s:(\\[])(@[^\\s/:;!\"'()\\[\\]{}<>=]+)");
+
+    private static final class MatchRange {
+        final String handle;
+        final int start;
+        final int end;
+
+        MatchRange(String handle, int start, int end) {
+            this.handle = handle;
+            this.start = start;
+            this.end = end;
+        }
+    }
 
     /**
      * Pre-fetch hook called when SpannableString is being built in the background.
@@ -62,9 +85,23 @@ public class ReturnYouTubeUsernamePatch {
                 return;
             }
 
-            String text = stripWhitespace(original.toString());
-            if (isEligibleHandle(contextInterface, text)) {
-                ChannelResolver.prefetch(text, API_KEY.get());
+            String text = original.toString();
+            if (text.isEmpty()) return;
+
+            // 1. Standalone handle (comments / Shorts)
+            String stripped = stripWhitespace(text);
+            if (isEligibleHandle(contextInterface, stripped)) {
+                ChannelResolver.prefetch(stripped, API_KEY.get());
+                return;
+            }
+
+            // 2. Live chat handles
+            if (REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text)) {
+                Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
+                while (matcher.find()) {
+                    String handle = matcher.group(1);
+                    ChannelResolver.prefetch(handle, API_KEY.get());
+                }
             }
         } catch (Exception ex) {
             Logger.printException(() -> "ReturnYouTubeUsername preFetchLithoText failed", ex);
@@ -81,21 +118,112 @@ public class ReturnYouTubeUsernamePatch {
                 return original;
             }
 
-            String text = stripWhitespace(original.toString());
-            if (!isEligibleHandle(contextInterface, text)) {
-                return original;
+            String text = original.toString();
+            if (text.isEmpty()) return original;
+
+            // Check channel profile header / bottom sheet exclusion first
+            if (contextInterface != null) {
+                String path = getPath(contextInterface);
+                String identifier = getIdentifier(contextInterface);
+                if (isChannelProfileHeader(path, identifier)) {
+                    return original;
+                }
             }
 
-            int format = DISPLAY_FORMAT.get();
-            String resolved = ChannelResolver.getOrResolve(text, API_KEY.get(), format);
+            // 1. Live Chat handle replacement
+            if (REPLACE_LIVE_CHAT.get() && isLiveChatContext(contextInterface, text)) {
+                return replaceLiveChatHandles(original);
+            }
 
-            if (resolved != null && !resolved.isEmpty() && !resolved.equals(text)) {
-                return newSpanUsingStylingOfAnotherSpan(original, resolved);
+            // 2. Standalone handle replacement (Comments, Shorts uploaders)
+            String stripped = stripWhitespace(text);
+            if (isEligibleHandle(contextInterface, stripped)) {
+                int format = DISPLAY_FORMAT.get();
+                String resolved = ChannelResolver.getOrResolve(stripped, API_KEY.get(), format);
+                if (resolved != null && !resolved.isEmpty() && !resolved.equals(stripped)) {
+                    return newSpanUsingStylingOfAnotherSpan(original, resolved);
+                }
             }
         } catch (Exception ex) {
             Logger.printException(() -> "ReturnYouTubeUsername onLithoTextLoaded failed", ex);
         }
         return original;
+    }
+
+    /**
+     * Replaces handles in live chat rows while preserving all spans, badges, and formatting.
+     */
+    private static CharSequence replaceLiveChatHandles(CharSequence original) {
+        String text = original.toString();
+        Matcher matcher = IN_TEXT_HANDLE_PATTERN.matcher(text);
+
+        List<MatchRange> matches = new ArrayList<>();
+        while (matcher.find()) {
+            String handle = matcher.group(1);
+            int start = matcher.start(1);
+            int end = matcher.end(1);
+            matches.add(new MatchRange(handle, start, end));
+        }
+
+        if (matches.isEmpty()) {
+            return original;
+        }
+
+        SpannableStringBuilder ssb = new SpannableStringBuilder(original);
+        boolean modified = false;
+
+        // Replace from end to start so earlier indices remain valid
+        for (int i = matches.size() - 1; i >= 0; i--) {
+            MatchRange m = matches.get(i);
+            String resolved = ChannelResolver.getOrResolveLiveChat(
+                    m.handle, API_KEY.get(), DISPLAY_FORMAT.get());
+
+            if (resolved != null && !resolved.isEmpty() && !resolved.equals(m.handle)) {
+                ssb.replace(m.start, m.end, resolved);
+                modified = true;
+            }
+        }
+
+        return modified ? ssb : original;
+    }
+
+    /**
+     * Checks if this text component is within a Live Chat / Super Chat context.
+     */
+    private static boolean isLiveChatContext(ContextInterface contextInterface, String text) {
+        if (contextInterface != null) {
+            String path = getPath(contextInterface);
+            String identifier = getIdentifier(contextInterface);
+            if (path.contains("live_chat") || path.contains("super_chat")
+                    || identifier.contains("live_chat") || identifier.contains("super_chat")) {
+                return true;
+            }
+        }
+        // Heuristic: compound string containing replacement character (\uFFFC for badges) and @
+        if (text != null && text.length() > 2) {
+            if (text.indexOf('\uFFFC') >= 0 && text.indexOf('@') >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String getPath(ContextInterface contextInterface) {
+        if (contextInterface == null) return "";
+        try {
+            StringBuilder pb = contextInterface.patch_getPathBuilder();
+            if (pb != null) return pb.toString().toLowerCase(Locale.ENGLISH);
+        } catch (Exception ignored) {}
+        return "";
+    }
+
+    private static String getIdentifier(ContextInterface contextInterface) {
+        if (contextInterface == null) return "";
+        try {
+            String id = contextInterface.patch_getIdentifier();
+            if (id != null) return id.toLowerCase(Locale.ENGLISH);
+        } catch (Exception ignored) {}
+        return "";
     }
 
     /**
@@ -112,21 +240,10 @@ public class ReturnYouTubeUsernamePatch {
 
         // Check context if available
         if (contextInterface != null) {
-            String path = "";
-            try {
-                StringBuilder pb = contextInterface.patch_getPathBuilder();
-                if (pb != null) path = pb.toString().toLowerCase(Locale.ENGLISH);
-            } catch (Exception ignored) {}
-
-            String identifier = "";
-            try {
-                String id = contextInterface.patch_getIdentifier();
-                if (id != null) identifier = id.toLowerCase(Locale.ENGLISH);
-            } catch (Exception ignored) {}
+            String path = getPath(contextInterface);
+            String identifier = getIdentifier(contextInterface);
 
             // Priority 1: Channel profile header / bottom sheet (Image 2 vs Image 3)
-            // Under a channel's header/profile, the handle item (e.g. @iamvaca8787 under the channel name)
-            // is specifically meant to show the channel's @handle and must NOT be replaced with the channel name again.
             if (isChannelProfileHeader(path, identifier)) {
                 return false;
             }
