@@ -130,7 +130,7 @@ public class ReturnYouTubeUsernamePatch {
                                 "            <app.morphe.extension.youtube.patches.returnyoutubeusername.ReturnYouTubeUsernameAboutPreference\n" +
                                 "                android:key=\"morphe_return_youtube_username_about\"\n" +
                                 "                android:title=\"關於 Return YouTube Username\"\n" +
-                                "                android:summary=\"v2.2.12 · 專案資訊、版本與相關連結\"\n" +
+                                "                android:summary=\"v2.3 · 專案資訊、版本與相關連結\"\n" +
                                 "                android:icon=\"@drawable/morphe_settings_screen_00_about\"\n" +
                                 "                android:layout=\"@layout/preference_with_icon\"\n" +
                                 "                app:iconSpaceReserved=\"true\" />\n" +

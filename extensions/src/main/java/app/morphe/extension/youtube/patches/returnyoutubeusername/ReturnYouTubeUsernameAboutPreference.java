@@ -30,7 +30,7 @@ import app.morphe.extension.shared.Logger;
 @SuppressWarnings("deprecation")
 public class ReturnYouTubeUsernameAboutPreference extends Preference {
 
-    public static final String VERSION = "v2.2.12";
+    public static final String VERSION = "v2.3";
     public static final String REPO_URL = "https://github.com/snowindy0321/return-youtube-username";
     public static final String ADD_SOURCE_URL = "https://morphe.software/add-source?github=snowindy0321/return-youtube-username&name=Return%20YouTube%20Username";
     public static final String RELEASES_URL = "https://github.com/snowindy0321/return-youtube-username/releases";
@@ -151,9 +151,9 @@ public class ReturnYouTubeUsernameAboutPreference extends Preference {
 
         String statusHeader = isZhTW ? "已是最新版本" : (isZhCN ? "已是最新版本" : "Up to date");
         String statusBody = isZhTW
-                ? ("目前安裝版本：" + VERSION + " · 純獨立補丁包")
-                : (isZhCN ? ("当前安装版本：" + VERSION + " · 纯独立补丁包")
-                          : ("Installed version: " + VERSION + " · Pure Standalone"));
+                ? ("目前安裝版本：" + VERSION)
+                : (isZhCN ? ("当前安装版本：" + VERSION)
+                          : ("Installed version: " + VERSION));
 
         String descHeader = isZhTW ? "專案簡介" : (isZhCN ? "项目简介" : "About This Patch");
         String descBody = isZhTW

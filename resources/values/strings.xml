@@ -16,7 +16,7 @@
     <string name="morphe_return_youtube_username_replace_all_handles_title">Replace all handles</string>
     <string name="morphe_return_youtube_username_replace_all_handles_summary">Replace @handles anywhere else in the app</string>
     <string name="morphe_return_youtube_username_about_title">About Return YouTube Username</string>
-    <string name="morphe_return_youtube_username_about_summary">v2.2.12 · Project info, version &amp; open source links</string>
+    <string name="morphe_return_youtube_username_about_summary">v2.3 · Project info, version &amp; open source links</string>
     <string name="morphe_return_youtube_username_api_key_title">YouTube Data API v3 key</string>
     <string name="morphe_return_youtube_username_api_key_summary">Optional. If left blank, handles are resolved automatically without an API key.</string>
 </resources>
