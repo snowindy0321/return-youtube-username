@@ -30,7 +30,7 @@ import app.morphe.extension.shared.Logger;
 @SuppressWarnings("deprecation")
 public class ReturnYouTubeUsernameAboutPreference extends Preference {
 
-    public static final String VERSION = "v2.3";
+    public static final String VERSION = "v2.3.1";
     public static final String REPO_URL = "https://github.com/snowindy0321/return-youtube-username";
     public static final String ADD_SOURCE_URL = "https://morphe.software/add-source?github=snowindy0321/return-youtube-username&name=Return%20YouTube%20Username";
     public static final String RELEASES_URL = "https://github.com/snowindy0321/return-youtube-username/releases";

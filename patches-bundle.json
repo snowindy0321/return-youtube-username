@@ -1,8 +1,8 @@
 {
-  "created_at": "2026-11-11T12:00:00",
-  "description": "## Return YouTube Username v2.3\n\n- Comprehensive Handle Restoration: Restores `@handles` back to original channel names across Comments, Shorts, Live Chat & Super Chats, Video Titles, Descriptions, and Video Subtitles.\n- Smart Profile & Preview Card Exclusion: Intelligently preserves `@handles` on channel profile headers and preview bottom sheets to prevent duplicate name displays.\n- High-Speed Stream Parsing & Dual-Layer Cache: Fast stream resolver (~0.5s) with zero API quota required, backed by in-memory LRU and persistent disk caches.\n- Hierarchical Settings Controls: Integrated first-level Morphe preference screen with master switch cascading and multi-language support (zh-TW, zh-CN, en).\n- Tested & Verified: Fully compatible with YouTube v21.30.216, Morphe Manager v2.5.0, and Morphe Patches v2.1.0+.",
-  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.3/return-youtube-username.mpp",
+  "created_at": "2026-11-23T16:25:00",
+  "description": "## Return YouTube Username v2.3.1\n\n- Live Chat & In-Text Matching Fix: Fixed partial-prefix handle matching (e.g., preventing a prefix of a longer Unicode, symbol-suffixed, or >30-char display name from being falsely matched as a shorter `@handle`) by adding Unicode/middle-dot support and strict left/right boundary checks.\n- Comprehensive Handle Restoration: Restores `@handles` back to original channel names across Comments, Shorts, Live Chat & Super Chats, Video Titles, Descriptions, and Video Subtitles.\n- Smart Profile & Preview Card Exclusion: Intelligently preserves `@handles` on channel profile headers and preview bottom sheets to prevent duplicate name displays.\n- High-Speed Stream Parsing & Dual-Layer Cache: Fast stream resolver (~0.5s) with zero API quota required, backed by in-memory LRU and persistent disk caches.\n- Tested & Verified: Fully compatible with YouTube v21.30.216, Morphe Manager v2.5.0, and Morphe Patches v2.1.0+.",
+  "download_url": "https://github.com/snowindy0321/return-youtube-username/releases/download/v2.3.1/return-youtube-username.mpp",
   "signature_download_url": "",
-  "version": "2.3",
+  "version": "2.3.1",
   "public_key": "NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk="
 }

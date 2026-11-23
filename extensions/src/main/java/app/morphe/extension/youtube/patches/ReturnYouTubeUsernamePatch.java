@@ -63,9 +63,13 @@ public class ReturnYouTubeUsernamePatch {
     private static final Pattern HANDLE_PATTERN =
             Pattern.compile("^@[^\\s/@#%&?+:;!\"'()\\[\\]{}<>=]+$");
 
-    // YouTube handle within text: starts at line begin or preceded by non-handle character
-    private static final Pattern IN_TEXT_HANDLE_PATTERN =
-            Pattern.compile("(?:^|[^a-zA-Z0-9._%+-])(@[a-zA-Z0-9_-](?:[a-zA-Z0-9._-]{0,28}[a-zA-Z0-9_-])?)");
+    // YouTube handle within text: supports Unicode letters/digits/marks, '_', '-', '.', and middle dot '·',
+    // bounded on both sides so partial prefixes of longer handles or display names are never matched.
+    private static final Pattern IN_TEXT_HANDLE_PATTERN = Pattern.compile(
+            "(?:^|[^\\p{L}\\p{N}\\p{M}._%+-])"
+                    + "(@[\\p{L}\\p{N}\\p{M}_\\-\\u00B7](?:[\\p{L}\\p{N}\\p{M}._\\-\\u00B7]{0,58}[\\p{L}\\p{N}\\p{M}_\\-\\u00B7])?)"
+                    + "(?=$|[\\s\\u00A0\\u200B-\\u200F\\u202A-\\u202E\\u2066-\\u2069\\uFEFF\\uFFFC:：,，。、;；)）\\]】}」』>》/|]|[.!！?？~～](?![\\p{L}\\p{N}\\p{M}_\\-\\u00B7]))"
+    );
 
     private static final class MatchRange {
         final String handle;
