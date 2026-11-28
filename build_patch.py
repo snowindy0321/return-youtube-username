@@ -83,12 +83,17 @@ def run(cmd, desc):
         jbr = r"C:\Program Files\Android\Android Studio\jbr"
         env["JAVA_HOME"] = jbr
         env["PATH"] = os.path.join(jbr, "bin") + os.pathsep + env.get("PATH", "")
-    res = subprocess.run(cmd, shell=True, capture_output=True, text=True, env=env)
+    res = subprocess.run(cmd, shell=False, capture_output=True, text=True, env=env)
     if res.returncode != 0:
         print("STDOUT:", res.stdout)
         print("STDERR:", res.stderr)
         raise RuntimeError(f"Step failed: {desc}")
     return res.stdout
+
+def d8_prefix():
+    if sys.platform == "win32" and D8.lower().endswith((".bat", ".cmd")):
+        return ["cmd", "/c", D8]
+    return [D8]
 
 def main():
     print("=== Building Pure Standalone Morphe Patch: Return YouTube Username ===")
@@ -115,7 +120,7 @@ def main():
     with open(ext_filelist, "w", encoding="utf-8") as f:
         f.write("\n".join(stubs_files + ext_files))
 
-    cmd_javac_ext = f'"{JAVAC}" --release 8 -cp "{ANDROID_JAR}" -d "{ext_classes}" @"{ext_filelist}"'
+    cmd_javac_ext = [JAVAC, "--release", "8", "-cp", ANDROID_JAR, "-d", ext_classes, f"@{ext_filelist}"]
     run(cmd_javac_ext, "Compiling extension sources")
 
     # 2. D8: Convert extension classes to DEX
@@ -127,8 +132,9 @@ def main():
         for f in files:
             if f.endswith(".class") and "app/morphe/extension/youtube" in root.replace("\\", "/"):
                 ext_class_files.append(os.path.join(root, f))
+    ext_class_files.sort()
 
-    cmd_d8_ext = f'"{D8}" --release --min-api 26 --output "{ext_dex_dir}" ' + " ".join(f'"{f}"' for f in ext_class_files)
+    cmd_d8_ext = d8_prefix() + ["--release", "--min-api", "26", "--output", ext_dex_dir] + ext_class_files
     run(cmd_d8_ext, "D8 converting extension classes to DEX")
 
     # 3. Compile patch definition sources
@@ -146,7 +152,7 @@ def main():
     with open(patch_filelist, "w", encoding="utf-8") as f:
         f.write("\n".join(patch_files))
 
-    cmd_javac_patch = f'"{JAVAC}" --release 17 -cp "{MORPHE_CLI}" -d "{patch_classes}" @"{patch_filelist}"'
+    cmd_javac_patch = [JAVAC, "--release", "17", "-cp", MORPHE_CLI, "-d", patch_classes, f"@{patch_filelist}"]
     run(cmd_javac_patch, "Compiling patch definition")
 
     # 4. Convert patch classes to DEX
@@ -158,8 +164,9 @@ def main():
         for f in files:
             if f.endswith(".class"):
                 patch_class_files.append(os.path.join(root, f))
+    patch_class_files.sort()
 
-    cmd_d8_patch = f'"{D8}" --release --min-api 26 --output "{patch_dex_dir}" ' + " ".join(f'"{f}"' for f in patch_class_files)
+    cmd_d8_patch = d8_prefix() + ["--release", "--min-api", "26", "--output", patch_dex_dir] + patch_class_files
     run(cmd_d8_patch, "D8 converting patch classes to DEX")
 
     # 5. Assemble standalone MPP package
@@ -213,8 +220,8 @@ def main():
 
     # 8. Sign bundle
     signer_java = os.path.join(BASE_DIR, "SignBundle.java")
-    private_key = os.environ.get("MORPHE_PRIVATE_KEY", "ZAC2EP/Tqdmb1Fm7Sxj/s5XVXNLeZFPLaP5HfJJLYvI=")
-    cmd_sign = f'"{JAVA}" -cp "{MORPHE_CLI}" "{signer_java}" "{out_mpp}" "{private_key}"'
+    private_key = os.environ.get("MORPHE_PRIVATE_KEY") or "ZAC2EP/Tqdmb1Fm7Sxj/s5XVXNLeZFPLaP5HfJJLYvI="
+    cmd_sign = [JAVA, "-cp", MORPHE_CLI, signer_java, out_mpp, private_key]
     run(cmd_sign, "Signing standalone MPP")
 
     print(f"[+] Successfully built pure standalone MPP: {out_mpp} ({os.path.getsize(out_mpp):,} bytes)")
