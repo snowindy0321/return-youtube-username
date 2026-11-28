@@ -1,7 +1,12 @@
 <resources>
-    <string-array name="morphe_return_youtube_username_display_format_entries">
-        <item>仅显示频道名称 (例: MrBeast)</item>
-        <item>频道名称 (用户名) (例: MrBeast (@mrbeast))</item>
-        <item>用户名 (频道名称) (例: @mrbeast (MrBeast))</item>
+    <string-array name="morphe_ryu_display_format_entries">
+        <item>仅频道名称</item>
+        <item>频道名称 (@用户名)</item>
+        <item>\@用户名 (频道名称)</item>
+    </string-array>
+    <string-array name="morphe_ryu_display_format_entry_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 </resources>

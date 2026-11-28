@@ -1,10 +1,10 @@
 <resources>
-    <string-array name="morphe_return_youtube_username_display_format_entries">
-        <item>Original username only (e.g. MrBeast)</item>
-        <item>Username (handle) (e.g. MrBeast (@mrbeast))</item>
-        <item>Handle (username) (e.g. @mrbeast (MrBeast))</item>
+    <string-array name="morphe_ryu_display_format_entries">
+        <item>Channel name</item>
+        <item>Channel name (@handle)</item>
+        <item>\@handle (Channel name)</item>
     </string-array>
-    <string-array name="morphe_return_youtube_username_display_format_entry_values" translatable="false">
+    <string-array name="morphe_ryu_display_format_entry_values" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>

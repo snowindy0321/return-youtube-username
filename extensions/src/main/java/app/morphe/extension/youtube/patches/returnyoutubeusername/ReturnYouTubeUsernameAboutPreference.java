@@ -30,7 +30,7 @@ import app.morphe.extension.shared.Logger;
 @SuppressWarnings("deprecation")
 public class ReturnYouTubeUsernameAboutPreference extends Preference {
 
-    public static final String VERSION = "v2.3.1";
+    public static final String VERSION = "v2.4";
     public static final String REPO_URL = "https://github.com/snowindy0321/return-youtube-username";
     public static final String ADD_SOURCE_URL = "https://morphe.software/add-source?github=snowindy0321/return-youtube-username&name=Return%20YouTube%20Username";
     public static final String RELEASES_URL = "https://github.com/snowindy0321/return-youtube-username/releases";
@@ -162,7 +162,7 @@ public class ReturnYouTubeUsernameAboutPreference extends Preference {
                           : "Native lightweight patch for YouTube Android (Morphe) that restores @handles in comments, Shorts, live chat, and video titles/descriptions to actual channel names.");
 
         String compHeader = isZhTW ? "實測相容環境" : (isZhCN ? "实测兼容环境" : "Tested Environments");
-        String compBody = "YouTube v21.30.216 · Morphe Manager v2.5.0 · Morphe Patches v2.1.0+";
+        String compBody = "YouTube v21.30.216 · Morphe Manager v2.8.0 · Morphe Patches v2.4.0+";
 
         String sectionTitle = isZhTW ? "相關連結與資源" : (isZhCN ? "相关链接与资源" : "Links & Resources");
         String repoTitle = isZhTW ? "原始碼倉庫" : (isZhCN ? "源代码仓库" : "Source Code");
@@ -213,7 +213,7 @@ public class ReturnYouTubeUsernameAboutPreference extends Preference {
                 + "</style></head><body>"
                 + "<div class=\"dialog-header\">"
                 + "<div class=\"app-logo\">" + svgLogo + "</div>"
-                + "<div class=\"app-name\">Return YouTube Username</div>"
+                + "<div class=\"app-name\">Return YouTube Username+</div>"
                 + "<div class=\"info-card\"><h3>" + statusHeader + "</h3><p>" + statusBody + "</p></div>"
                 + "<div class=\"info-card\"><h3>" + descHeader + "</h3><p>" + descBody + "</p></div>"
                 + "<div class=\"info-card\"><h3>" + compHeader + "</h3><p>" + compBody + "</p></div>"

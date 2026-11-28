@@ -1,4 +1,4 @@
-# Return YouTube Username (RYU) Patch for Morphe
+# Return YouTube Username+ (RYU) Patch for Morphe
 
 <p align="center">
   <a href="https://morphe.software/add-source?github=snowindy0321/return-youtube-username&name=Return%20YouTube%20Username">
@@ -11,12 +11,12 @@
     <img src="https://img.shields.io/github/v/release/snowindy0321/return-youtube-username?style=flat-square&color=blue&label=Latest%20Release" alt="Latest Release">
   </a>
   <img src="https://img.shields.io/badge/Tested%20YouTube-v21.30.216-red?style=flat-square&logo=youtube" alt="Tested YouTube">
-  <img src="https://img.shields.io/badge/Tested%20Morphe%20Manager-v2.5.0-green?style=flat-square" alt="Tested Morphe Manager">
-  <img src="https://img.shields.io/badge/Morphe%20Patches-v2.1.0+-blueviolet?style=flat-square" alt="Morphe Patches Compatibility">
-  <img src="https://img.shields.io/badge/Package%20Size-~21%20KB-orange?style=flat-square" alt="Package Size">
+  <img src="https://img.shields.io/badge/Tested%20Morphe%20Manager-v2.8.0-green?style=flat-square" alt="Tested Morphe Manager">
+  <img src="https://img.shields.io/badge/Morphe%20Patches-v2.4.0+-blueviolet?style=flat-square" alt="Morphe Patches Compatibility">
+  <img src="https://img.shields.io/badge/Package%20Size-~42%20KB-orange?style=flat-square" alt="Package Size">
 </p>
 
-為 YouTube Android (Morphe) 開發的原生輕量補丁，將 YouTube 內的留言區、Shorts 短片、即時直播聊天室及聊天重播中顯示的 `@使用者代號`（Handle），全面還原並替換為「**頻道顯示名稱**」（Display Name / Username）。
+為 YouTube Android (Morphe) 開發的原生輕量補丁，將 YouTube 內的留言區、Shorts 短片、影片資訊與推薦卡片、即時直播聊天室及聊天重播中顯示的 `@使用者代號`（Handle），全面還原並替換為「**頻道顯示名稱**」（Display Name / Username）。
 
 ---
 
@@ -27,8 +27,8 @@
 | 項目 | 實測版本 / 環境 | 備註說明 |
 | :--- | :--- | :--- |
 | **YouTube 官方 APK** | **`21.30.216`** | 推薦使用官方推薦之 `arm64-v8a` 或 universal APK |
-| **Morphe Manager** | **`v2.5.0`** | 官方發布最新版本，內建 Patcher `v2.3.0` |
-| **Morphe Patches 官方補丁源** | **`v2.1.0+`** | 可與Morphe官方補丁共存 |
+| **Morphe Manager** | **`v2.8.0`** | 官方發布最新版本，內建 Patcher `v2.6.0` |
+| **Morphe Patches 官方補丁源** | **`v2.4.0+`** | 可與 Morphe 官方補丁和平共存 |
 | **Morphe CLI (電腦端桌面版)** | **`v2.1.1`** | 支援命令列離線修補打包 |
 | **實測 Android 系統** | **Android 12 (API 31)** 及以上 | 支援 ARM64-v8a 架構裝置 |
 
@@ -54,7 +54,7 @@ Morphe Manager 將會自動彈出提示，確認後即可完成新增。
    - **來源組織 / 倉庫 (Repository)**: `snowindy0321/return-youtube-username`
    - **來源名稱 (Name)**: `Return YouTube Username`
 4. 點擊儲存，並在來源清單中重新整理。
-5. 進入修補清單時，在補丁選單中即可看到並勾選 **Return YouTube Username**，與其他官方補丁一同修補打包！
+5. 進入修補清單時，在補丁選單中勾選 **`Return YouTube Username+`**（與 Morphe `v2.4.0+` 內建的 `Return YouTube Username` 區隔），與其他官方補丁一同修補打包！
 
 ---
 
@@ -67,7 +67,8 @@ Morphe Manager 將會自動彈出提示，確認後即可完成新增。
   - 具備 Litho 元件專屬適配處理，在進行中直播推播新訊息時直接呈現頻道名稱。
   - 保留作者專屬身分徽章、會員貼圖、贊助色彩、粗體樣式及點擊互動功能。
 - **頻道頁面與提及預覽卡片智慧防誤替換**：在頻道首頁、點擊提及彈出的頻道預覽卡片（Channel Preview Card / Bottom Sheet）及資訊列中，智慧識別並保留官方代號標示（例如頻道標題下方的「`@頻道代碼`」），防止被重複替換為頻道名稱。
-  - **YouTube Data API v3 Key（選填）**：預設零設定即可開箱即用；亦可填入個人金鑰享有官方更高配額
+- **InnerTube API 與 7 天快取**：採用零設定 InnerTube API 解析，搭配記憶體與 7 天本地快取及非阻塞介面重繪，開箱即用；亦可選填個人 **YouTube Data API v3 Key** 享有更高配額。
+- **顯示格式切換**：支援於設定中自由切換顯示方式（`僅頻道名稱` / `頻道名稱 (@代號)` / `@代號 (頻道名稱)`）。
 ---
 ## 🛠️ 本機編譯指南
 
