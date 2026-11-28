@@ -2,14 +2,11 @@ name: Build and Release Morphe Patches
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g. 2.1.0)'
-        required: true
-        default: '2.1.0'
 
 permissions:
   contents: write
@@ -26,7 +23,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -36,58 +33,82 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android Build Tools and Platform
         run: |
-          sdkmanager "build-tools;34.0.0" "platforms;android-34"
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "${ANDROID_HOME}/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          fi
+          if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+            echo "Error: sdkmanager not found under ANDROID_HOME=${ANDROID_HOME}" >&2
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" "build-tools;34.0.0" "platforms;android-34"
 
       - name: Build MPP Patch Bundle
+        env:
+          KEY_SECRET: ${{ secrets.MORPHE_PRIVATE_KEY }}
         run: |
-          python build_patch.py
+          if [ -n "$KEY_SECRET" ]; then
+            export MORPHE_PRIVATE_KEY="$KEY_SECRET"
+          fi
+          python3 build_patch.py
+          test -s return-youtube-username.mpp
 
       - name: Determine Version
         id: get_version
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="v${{ github.event.inputs.version }}"
-            VER="${{ github.event.inputs.version }}"
-          else
-            TAG="${GITHUB_REF#refs/tags/}"
-            VER="${TAG#v}"
-          fi
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=$VER" >> $GITHUB_OUTPUT
+          TAG="${GITHUB_REF#refs/tags/}"
+          VER="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Update patches-bundle.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ steps.get_version.outputs.tag }}
+          VER: ${{ steps.get_version.outputs.version }}
+          REPO: ${{ github.repository }}
         run: |
-          TAG="${{ steps.get_version.outputs.tag }}"
-          VER="${{ steps.get_version.outputs.version }}"
-          python -c "
-          import json, datetime
-          data = {
-              'created_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
-              'description': f'## Return YouTube Username {TAG}\n\n- Replace YouTube `@handle` with original channel names in comments, Shorts, and across the app.\n- Zero-config public scraper + optional YouTube Data API v3 key.\n- Built for YouTube 21.30.216 & Morphe 2.1.0.',
-              'download_url': f'https://github.com/${{ github.repository }}/releases/download/{TAG}/return-youtube-username.mpp',
-              'signature_download_url': '',
-              'version': VER,
-              'public_key': 'NCbnOgfCE9vjVBk9+5RmM0VHPEfCaugTBdXmlo2M6Tk='
-          }
-          with open('patches-bundle.json', 'w', encoding='utf-8') as f:
-              json.dump(data, f, indent=2)
-          "
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add patches-bundle.json
-          git diff-index --quiet HEAD || git commit -m "chore: update patches-bundle.json for $TAG"
-          git push origin main || true
+          python3 - <<'PY'
+          import datetime, json, os
+
+          tag = os.environ["TAG"]
+          ver = os.environ["VER"]
+          repo = os.environ["REPO"]
+
+          with open("patches-bundle.json", "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          if data.get("version") != ver:
+              data["version"] = ver
+              data["download_url"] = f"https://github.com/{repo}/releases/download/{tag}/return-youtube-username.mpp"
+              data["created_at"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+              with open("patches-bundle.json", "w", encoding="utf-8") as f:
+                  json.dump(data, f, indent=2, ensure_ascii=False)
+                  f.write("\n")
+              print(f"Updated patches-bundle.json to version {ver} (preserving existing description).")
+          else:
+              print(f"patches-bundle.json already matches version {ver}; skipping update.")
+          PY
+          if ! git diff --quiet patches-bundle.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add patches-bundle.json
+            git commit -m "chore: update patches-bundle.json for $TAG"
+            git push origin HEAD:main || true
+          fi
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            return-youtube-username.mpp
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.get_version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" return-youtube-username.mpp --clobber
+          else
+            gh release create "$TAG" return-youtube-username.mpp --title "Return YouTube Username+ $TAG" --generate-notes
+          fi
